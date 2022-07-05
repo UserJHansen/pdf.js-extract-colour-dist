@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.15.209';
+    const workerVersion = '2.15.220';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -24443,6 +24443,10 @@ class PartialEvaluator {
             fn = _util.OPS.showText;
             break;
 
+          case _util.OPS.setTextRenderingMode:
+            stateManager.state.textRenderingMode = args[0];
+            break;
+
           case _util.OPS.setFillColorSpace:
             {
               const cachedColorSpace = _colorspace.ColorSpace.getCached(args[0], xref, localColorSpaceCache);
@@ -24766,9 +24770,7 @@ class PartialEvaluator {
       notASpace: -Infinity,
       transform: null,
       fontName: null,
-      hasEOL: false,
-      color: [0, 0, 0],
-      colorSpace: _colorspace.ColorSpace.singletons.gray
+      hasEOL: false
     };
     const twoLastChars = [" ", " "];
     let twoLastCharsPos = 0;
@@ -24797,7 +24799,7 @@ class PartialEvaluator {
     let xobjs = null;
     const emptyXObjectCache = new _image_utils.LocalImageCache();
     const emptyGStateCache = new _image_utils.LocalGStateCache();
-    const preprocessor = new EvaluatorPreprocessor(stream, xref, stateManager);
+    const preprocessor = new CustomEvaluatorPreprocessor(stream, xref, stateManager, resources);
     let textState;
 
     function getCurrentTextTransform() {
@@ -24834,6 +24836,7 @@ class PartialEvaluator {
       }
 
       textContentItem.fontName = loadedName;
+      textContentItem.color = stateManager.state.fillColor;
       const trm = textContentItem.transform = getCurrentTextTransform();
 
       if (!font.vertical) {
@@ -25007,8 +25010,7 @@ class PartialEvaluator {
               height: Math.abs(advanceY),
               transform: textContentItem.prevTransform,
               fontName: textContentItem.fontName,
-              hasEOL: false,
-              color: textState.fillColor
+              hasEOL: false
             });
           } else {
             textContentItem.height += advanceY;
@@ -25054,8 +25056,7 @@ class PartialEvaluator {
             height: 0,
             transform: textContentItem.prevTransform,
             fontName: textContentItem.fontName,
-            hasEOL: false,
-            color: textState.fillColor
+            hasEOL: false
           });
         } else {
           textContentItem.width += advanceX;
@@ -25175,8 +25176,7 @@ class PartialEvaluator {
           height: 0,
           transform: getCurrentTextTransform(),
           fontName: textState.font.loadedName,
-          hasEOL: true,
-          color: textState.fillColor
+          hasEOL: true
         });
       }
     }
@@ -25208,8 +25208,7 @@ class PartialEvaluator {
         height: Math.abs(height),
         transform: transf || getCurrentTextTransform(),
         fontName,
-        hasEOL: false,
-        color: textState.fillColor
+        hasEOL: false
       });
       return true;
     }
@@ -25225,7 +25224,6 @@ class PartialEvaluator {
         textContentItem.totalHeight += textContentItem.height * textContentItem.textAdvanceScale;
       }
 
-      textContentItem.color = textState.fillColor;
       textContent.items.push(runBidiTransform(textContentItem));
       textContentItem.initialized = false;
       textContentItem.str.length = 0;
@@ -25264,7 +25262,6 @@ class PartialEvaluator {
       timeSlotManager.reset();
       const operation = {};
       let stop,
-          cs,
           args = [];
 
       while (!(stop = timeSlotManager.check())) {
@@ -25278,50 +25275,8 @@ class PartialEvaluator {
         textState = stateManager.state;
         const fn = operation.fn;
         args = operation.args;
-        const localColorSpaceCache = new _image_utils.LocalColorSpaceCache();
 
         switch (fn | 0) {
-          case _util.OPS.setFillColorSpace:
-            {
-              const cachedColorSpace = _colorspace.ColorSpace.getCached(args[0], xref, localColorSpaceCache);
-
-              if (cachedColorSpace) {
-                stateManager.state.fillColorSpace = cachedColorSpace;
-                continue;
-              }
-
-              next(self.parseColorSpace({
-                cs: args[0],
-                resources,
-                localColorSpaceCache
-              }).then(function (colorSpace) {
-                if (colorSpace) {
-                  textState.fillColorSpace = colorSpace;
-                }
-              }));
-              return;
-            }
-
-          case _util.OPS.setFillColor:
-            cs = stateManager.state.fillColorSpace;
-            textState.fillColor = cs.getRgb(args, 0);
-            break;
-
-          case _util.OPS.setFillGray:
-            stateManager.state.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
-            textState.fillColor = _colorspace.ColorSpace.singletons.gray.getRgb(args, 0);
-            break;
-
-          case _util.OPS.setFillCMYKColor:
-            stateManager.state.fillColorSpace = _colorspace.ColorSpace.singletons.cmyk;
-            textState.fillColor = _colorspace.ColorSpace.singletons.cmyk.getRgb(args, 0);
-            break;
-
-          case _util.OPS.setFillRGBColor:
-            stateManager.state.fillColorSpace = _colorspace.ColorSpace.singletons.rgb;
-            textState.fillColor = _colorspace.ColorSpace.singletons.rgb.getRgb(args, 0);
-            break;
-
           case _util.OPS.setFont:
             var fontNameArg = args[0].name,
                 fontSizeArg = args[1];
@@ -26819,8 +26774,6 @@ class TextState {
     this.leading = 0;
     this.textHScale = 1;
     this.textRise = 0;
-    this.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
-    this.fillColor = [0, 0, 0];
   }
 
   setTextMatrix(a, b, c, d, e, f) {
@@ -27392,6 +27345,46 @@ class EvaluatorPreprocessor {
 }
 
 exports.EvaluatorPreprocessor = EvaluatorPreprocessor;
+
+class CustomEvaluatorPreprocessor extends EvaluatorPreprocessor {
+  constructor(stream, xref, stateManager, resources) {
+    super(stream, xref, stateManager);
+    this.resources = resources;
+    this.xref = xref;
+    var state = this.stateManager.state;
+    state.textRenderingMode = _util.TextRenderingMode.FILL;
+    state.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
+    state.fillColor = [0, 0, 0];
+  }
+
+  static preprocessCommand(fn, args) {
+    EvaluatorPreprocessor.prototype.preprocessCommand.call(this, fn, args);
+    var state = this.stateManager.state;
+
+    switch (fn) {
+      case _util.OPS.setFillColor:
+        var cs = state.fillColorSpace;
+        state.fillColor = cs.getRgb(args, 0);
+        break;
+
+      case _util.OPS.setFillGray:
+        state.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
+        state.fillColor = _colorspace.ColorSpace.singletons.gray.getRgb(args, 0);
+        break;
+
+      case _util.OPS.setFillCMYKColor:
+        state.fillColorSpace = _colorspace.ColorSpace.singletons.cmyk;
+        state.fillColor = _colorspace.ColorSpace.singletons.cmyk.getRgb(args, 0);
+        break;
+
+      case _util.OPS.setFillRGBColor:
+        state.fillColorSpace = _colorspace.ColorSpace.singletons.rgb;
+        state.fillColor = _colorspace.ColorSpace.singletons.rgb.getRgb(args, 0);
+        break;
+    }
+  }
+
+}
 
 /***/ }),
 /* 26 */
@@ -75220,8 +75213,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.209';
-const pdfjsBuild = '90f3b43a3';
+const pdfjsVersion = '2.15.220';
+const pdfjsBuild = 'a1ac1a61b';
 })();
 
 /******/ 	return __webpack_exports__;

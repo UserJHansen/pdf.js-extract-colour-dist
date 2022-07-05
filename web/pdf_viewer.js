@@ -319,7 +319,7 @@ const DEFAULT_L10N_STRINGS = {
   printing_not_supported: "Warning: Printing is not fully supported by this browser.",
   printing_not_ready: "Warning: The PDF is not fully loaded for printing.",
   web_fonts_disabled: "Web fonts are disabled: unable to use embedded PDF fonts.",
-  freetext_default_content: "Enter text…"
+  free_text_default_content: "Enter text…"
 };
 
 function getL10nFallback(key, args) {
@@ -462,14 +462,9 @@ class AnnotationLayerBuilder {
     };
 
     if (this.div) {
-      _pdfjsLib.AnnotationLayer.setDimensions(this.div, viewport);
-
       _pdfjsLib.AnnotationLayer.update(parameters);
     } else {
       this.div = document.createElement("div");
-
-      _pdfjsLib.AnnotationLayer.setDimensions(this.div, viewport);
-
       this.div.className = "annotationLayer";
       this.pageDiv.append(this.div);
       parameters.div = this.div;
@@ -1522,35 +1517,33 @@ function clamp(v, min, max) {
 }
 
 class ProgressBar {
+  #classList = null;
+  #percent = 0;
+  #visible = true;
+
   constructor(id) {
     if (arguments.length > 1) {
       throw new Error("ProgressBar no longer accepts any additional options, " + "please use CSS rules to modify its appearance instead.");
     }
 
-    this.visible = true;
-    this.div = document.querySelector(id + " .progress");
-    this.bar = this.div.parentNode;
-    this.percent = 0;
-  }
-
-  #updateBar() {
-    if (this._indeterminate) {
-      this.div.classList.add("indeterminate");
-      return;
-    }
-
-    this.div.classList.remove("indeterminate");
-    docStyle.setProperty("--progressBar-percent", `${this._percent}%`);
+    const bar = document.getElementById(id);
+    this.#classList = bar.classList;
   }
 
   get percent() {
-    return this._percent;
+    return this.#percent;
   }
 
   set percent(val) {
-    this._indeterminate = isNaN(val);
-    this._percent = clamp(val, 0, 100);
-    this.#updateBar();
+    this.#percent = clamp(val, 0, 100);
+
+    if (isNaN(val)) {
+      this.#classList.add("indeterminate");
+      return;
+    }
+
+    this.#classList.remove("indeterminate");
+    docStyle.setProperty("--progressBar-percent", `${this.#percent}%`);
   }
 
   setWidth(viewer) {
@@ -1567,21 +1560,21 @@ class ProgressBar {
   }
 
   hide() {
-    if (!this.visible) {
+    if (!this.#visible) {
       return;
     }
 
-    this.visible = false;
-    this.bar.classList.add("hidden");
+    this.#visible = false;
+    this.#classList.add("hidden");
   }
 
   show() {
-    if (this.visible) {
+    if (this.#visible) {
       return;
     }
 
-    this.visible = true;
-    this.bar.classList.remove("hidden");
+    this.#visible = true;
+    this.#classList.remove("hidden");
   }
 
 }
@@ -2203,7 +2196,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.15.209';
+    const viewerVersion = '2.15.220';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -3839,7 +3832,7 @@ class BaseViewer {
   }
 
   get annotationEditorMode() {
-    return this.#annotationEditorMode;
+    return this.#annotationEditorUIManager ? this.#annotationEditorMode : _pdfjsLib.AnnotationEditorType.DISABLE;
   }
 
   set annotationEditorMode(mode) {
@@ -8872,8 +8865,8 @@ var _text_layer_builder = __w_pdfjs_require__(9);
 
 var _xfa_layer_builder = __w_pdfjs_require__(10);
 
-const pdfjsVersion = '2.15.209';
-const pdfjsBuild = '90f3b43a3';
+const pdfjsVersion = '2.15.220';
+const pdfjsBuild = 'a1ac1a61b';
 })();
 
 /******/ 	return __webpack_exports__;

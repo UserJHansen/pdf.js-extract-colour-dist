@@ -4921,7 +4921,7 @@ function _fetchDocument2() {
             _context7.next = 5;
             return worker.messageHandler.sendWithPromise("GetDocRequest", {
               docId: docId,
-              apiVersion: '2.15.209',
+              apiVersion: '2.15.220',
               source: {
                 data: source.data,
                 url: source.url,
@@ -7788,9 +7788,9 @@ var _canvasInUse = {
   writable: true,
   value: new WeakSet()
 };
-var version = '2.15.209';
+var version = '2.15.220';
 exports.version = version;
-var build = '90f3b43a3';
+var build = 'a1ac1a61b';
 exports.build = build;
 
 /***/ }),
@@ -17765,7 +17765,7 @@ var FreeTextEditor = /*#__PURE__*/function (_AnnotationEditor) {
   }], [{
     key: "initialize",
     value: function initialize(l10n) {
-      this._l10nPromise = l10n.get("freetext_default_content");
+      this._l10nPromise = l10n.get("free_text_default_content");
       var style = getComputedStyle(document.documentElement);
       this._internalPadding = parseFloat(style.getPropertyValue("--freetext-padding"));
     }
@@ -22260,8 +22260,7 @@ var FileAttachmentAnnotationElement = /*#__PURE__*/function (_AnnotationElement1
 
       this.container.className = "fileAttachmentAnnotation";
       var trigger = document.createElement("div");
-      trigger.style.height = this.container.style.height;
-      trigger.style.width = this.container.style.width;
+      trigger.className = "popupTriggerArea";
       trigger.addEventListener("dblclick", this._download.bind(this));
 
       if (!this.data.hasPopup && ((_this$data$titleObj = this.data.titleObj) !== null && _this$data$titleObj !== void 0 && _this$data$titleObj.str || (_this$data$contentsOb = this.data.contentsObj) !== null && _this$data$contentsOb !== void 0 && _this$data$contentsOb.str || this.data.richText)) {
@@ -22291,10 +22290,16 @@ var AnnotationLayer = /*#__PURE__*/function () {
   _createClass(AnnotationLayer, null, [{
     key: "render",
     value: function render(parameters) {
+      var annotations = parameters.annotations,
+          div = parameters.div,
+          viewport = parameters.viewport;
+
+      _classStaticPrivateMethodGet(this, AnnotationLayer, _setDimensions).call(this, div, viewport);
+
       var sortedAnnotations = [],
           popupAnnotations = [];
 
-      var _iterator22 = _createForOfIteratorHelper(parameters.annotations),
+      var _iterator22 = _createForOfIteratorHelper(annotations),
           _step22;
 
       try {
@@ -22330,15 +22335,13 @@ var AnnotationLayer = /*#__PURE__*/function () {
         sortedAnnotations.push.apply(sortedAnnotations, popupAnnotations);
       }
 
-      var div = parameters.div;
-
       for (var _i8 = 0, _sortedAnnotations = sortedAnnotations; _i8 < _sortedAnnotations.length; _i8++) {
         var data = _sortedAnnotations[_i8];
         var element = AnnotationElementFactory.create({
           data: data,
           layer: div,
           page: parameters.page,
-          viewport: parameters.viewport,
+          viewport: viewport,
           linkService: parameters.linkService,
           downloadManager: parameters.downloadManager,
           imageResourcesPath: parameters.imageResourcesPath || "",
@@ -22390,25 +22393,14 @@ var AnnotationLayer = /*#__PURE__*/function () {
     key: "update",
     value: function update(parameters) {
       var annotationCanvasMap = parameters.annotationCanvasMap,
-          div = parameters.div;
+          div = parameters.div,
+          viewport = parameters.viewport;
+
+      _classStaticPrivateMethodGet(this, AnnotationLayer, _setDimensions).call(this, div, viewport);
 
       _classStaticPrivateMethodGet(this, AnnotationLayer, _setAnnotationCanvasMap).call(this, div, annotationCanvasMap);
 
       div.hidden = false;
-    }
-  }, {
-    key: "setDimensions",
-    value: function setDimensions(div, _ref3) {
-      var width = _ref3.width,
-          height = _ref3.height,
-          rotation = _ref3.rotation;
-      var style = div.style;
-      var flipOrientation = rotation % 180 !== 0,
-          widthStr = Math.floor(width) + "px",
-          heightStr = Math.floor(height) + "px";
-      style.width = flipOrientation ? heightStr : widthStr;
-      style.height = flipOrientation ? widthStr : heightStr;
-      div.setAttribute("data-main-rotation", rotation);
     }
   }]);
 
@@ -22416,6 +22408,19 @@ var AnnotationLayer = /*#__PURE__*/function () {
 }();
 
 exports.AnnotationLayer = AnnotationLayer;
+
+function _setDimensions(div, _ref3) {
+  var width = _ref3.width,
+      height = _ref3.height,
+      rotation = _ref3.rotation;
+  var style = div.style;
+  var flipOrientation = rotation % 180 !== 0,
+      widthStr = Math.floor(width) + "px",
+      heightStr = Math.floor(height) + "px";
+  style.width = flipOrientation ? heightStr : widthStr;
+  style.height = flipOrientation ? widthStr : heightStr;
+  div.setAttribute("data-main-rotation", rotation);
+}
 
 function _setAnnotationCanvasMap(div, annotationCanvasMap) {
   if (!annotationCanvasMap) {
@@ -27949,8 +27954,8 @@ var _svg = __w_pdfjs_require__(155);
 
 var _xfa_layer = __w_pdfjs_require__(153);
 
-var pdfjsVersion = '2.15.209';
-var pdfjsBuild = '90f3b43a3';
+var pdfjsVersion = '2.15.220';
+var pdfjsBuild = 'a1ac1a61b';
 {
   if (_is_node.isNodeJS) {
     var _require = __w_pdfjs_require__(156),

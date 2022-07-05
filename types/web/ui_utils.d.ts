@@ -203,13 +203,8 @@ export namespace PresentationModeState {
 }
 export class ProgressBar {
     constructor(id: any, ...args: any[]);
-    visible: boolean;
-    div: Element | null;
-    bar: ParentNode | null;
-    set percent(arg: any);
-    get percent(): any;
-    _indeterminate: boolean | undefined;
-    _percent: any;
+    set percent(arg: number);
+    get percent(): number;
     setWidth(viewer: any): void;
     hide(): void;
     show(): void;

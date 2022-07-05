@@ -470,7 +470,7 @@ var DEFAULT_L10N_STRINGS = {
   printing_not_supported: "Warning: Printing is not fully supported by this browser.",
   printing_not_ready: "Warning: The PDF is not fully loaded for printing.",
   web_fonts_disabled: "Web fonts are disabled: unable to use embedded PDF fonts.",
-  freetext_default_content: "Enter text…"
+  free_text_default_content: "Enter text…"
 };
 
 function getL10nFallback(key, args) {
@@ -734,14 +734,9 @@ var AnnotationLayerBuilder = /*#__PURE__*/function () {
                 };
 
                 if (this.div) {
-                  _pdfjsLib.AnnotationLayer.setDimensions(this.div, viewport);
-
                   _pdfjsLib.AnnotationLayer.update(parameters);
                 } else {
                   this.div = document.createElement("div");
-
-                  _pdfjsLib.AnnotationLayer.setDimensions(this.div, viewport);
-
                   this.div.className = "annotationLayer";
                   this.pageDiv.append(this.div);
                   parameters.div = this.div;
@@ -1507,11 +1502,19 @@ exports.roundToDivide = roundToDivide;
 exports.scrollIntoView = scrollIntoView;
 exports.watchScroll = watchScroll;
 
-function _classPrivateMethodInitSpec(obj, privateSet) { _checkPrivateRedeclaration(obj, privateSet); privateSet.add(obj); }
+function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
 
 function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
-function _classPrivateMethodGet(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
+function _classPrivateFieldGet(receiver, privateMap) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get"); return _classApplyDescriptorGet(receiver, descriptor); }
+
+function _classApplyDescriptorGet(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
+
+function _classPrivateFieldSet(receiver, privateMap, value) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "set"); _classApplyDescriptorSet(receiver, descriptor, value); return value; }
+
+function _classExtractFieldDescriptor(receiver, privateMap, action) { if (!privateMap.has(receiver)) { throw new TypeError("attempted to " + action + " private field on non-instance"); } return privateMap.get(receiver); }
+
+function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
 
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
@@ -2024,34 +2027,57 @@ function clamp(v, min, max) {
   return Math.min(Math.max(v, min), max);
 }
 
-var _updateBar = /*#__PURE__*/new WeakSet();
+var _classList = /*#__PURE__*/new WeakMap();
+
+var _percent = /*#__PURE__*/new WeakMap();
+
+var _visible = /*#__PURE__*/new WeakMap();
 
 var ProgressBar = /*#__PURE__*/function () {
   function ProgressBar(id) {
     _classCallCheck(this, ProgressBar);
 
-    _classPrivateMethodInitSpec(this, _updateBar);
+    _classPrivateFieldInitSpec(this, _classList, {
+      writable: true,
+      value: null
+    });
+
+    _classPrivateFieldInitSpec(this, _percent, {
+      writable: true,
+      value: 0
+    });
+
+    _classPrivateFieldInitSpec(this, _visible, {
+      writable: true,
+      value: true
+    });
 
     if (arguments.length > 1) {
       throw new Error("ProgressBar no longer accepts any additional options, " + "please use CSS rules to modify its appearance instead.");
     }
 
-    this.visible = true;
-    this.div = document.querySelector(id + " .progress");
-    this.bar = this.div.parentNode;
-    this.percent = 0;
+    var bar = document.getElementById(id);
+
+    _classPrivateFieldSet(this, _classList, bar.classList);
   }
 
   _createClass(ProgressBar, [{
     key: "percent",
     get: function get() {
-      return this._percent;
+      return _classPrivateFieldGet(this, _percent);
     },
     set: function set(val) {
-      this._indeterminate = isNaN(val);
-      this._percent = clamp(val, 0, 100);
+      _classPrivateFieldSet(this, _percent, clamp(val, 0, 100));
 
-      _classPrivateMethodGet(this, _updateBar, _updateBar2).call(this);
+      if (isNaN(val)) {
+        _classPrivateFieldGet(this, _classList).add("indeterminate");
+
+        return;
+      }
+
+      _classPrivateFieldGet(this, _classList).remove("indeterminate");
+
+      docStyle.setProperty("--progressBar-percent", "".concat(_classPrivateFieldGet(this, _percent), "%"));
     }
   }, {
     key: "setWidth",
@@ -2070,22 +2096,24 @@ var ProgressBar = /*#__PURE__*/function () {
   }, {
     key: "hide",
     value: function hide() {
-      if (!this.visible) {
+      if (!_classPrivateFieldGet(this, _visible)) {
         return;
       }
 
-      this.visible = false;
-      this.bar.classList.add("hidden");
+      _classPrivateFieldSet(this, _visible, false);
+
+      _classPrivateFieldGet(this, _classList).add("hidden");
     }
   }, {
     key: "show",
     value: function show() {
-      if (this.visible) {
+      if (_classPrivateFieldGet(this, _visible)) {
         return;
       }
 
-      this.visible = true;
-      this.bar.classList.remove("hidden");
+      _classPrivateFieldSet(this, _visible, true);
+
+      _classPrivateFieldGet(this, _classList).remove("hidden");
     }
   }]);
 
@@ -2093,16 +2121,6 @@ var ProgressBar = /*#__PURE__*/function () {
 }();
 
 exports.ProgressBar = ProgressBar;
-
-function _updateBar2() {
-  if (this._indeterminate) {
-    this.div.classList.add("indeterminate");
-    return;
-  }
-
-  this.div.classList.remove("indeterminate");
-  docStyle.setProperty("--progressBar-percent", "".concat(this._percent, "%"));
-}
 
 function getActiveOrFocusedElement() {
   var curRoot = document;
@@ -3037,7 +3055,7 @@ var BaseViewer = /*#__PURE__*/function () {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    var viewerVersion = '2.15.209';
+    var viewerVersion = '2.15.220';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error("The API version \"".concat(_pdfjsLib.version, "\" does not match the Viewer version \"").concat(viewerVersion, "\"."));
@@ -4745,7 +4763,7 @@ var BaseViewer = /*#__PURE__*/function () {
   }, {
     key: "annotationEditorMode",
     get: function get() {
-      return _classPrivateFieldGet(this, _annotationEditorMode);
+      return _classPrivateFieldGet(this, _annotationEditorUIManager) ? _classPrivateFieldGet(this, _annotationEditorMode) : _pdfjsLib.AnnotationEditorType.DISABLE;
     },
     set: function set(mode) {
       if (!_classPrivateFieldGet(this, _annotationEditorUIManager)) {
@@ -11542,8 +11560,8 @@ var _text_layer_builder = __w_pdfjs_require__(9);
 
 var _xfa_layer_builder = __w_pdfjs_require__(10);
 
-var pdfjsVersion = '2.15.209';
-var pdfjsBuild = '90f3b43a3';
+var pdfjsVersion = '2.15.220';
+var pdfjsBuild = 'a1ac1a61b';
 })();
 
 /******/ 	return __webpack_exports__;

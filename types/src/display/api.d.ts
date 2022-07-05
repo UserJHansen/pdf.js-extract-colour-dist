@@ -293,10 +293,9 @@ export type TextItem = {
      */
     hasEOL: boolean;
     /**
-     * - An RGB representation of the
-     * text color.
+     * - Color of the text.
      */
-    color: Array<number, number, number>;
+    colorFill: [number, number, number];
 };
 /**
  * Page text marked content part.
@@ -1050,8 +1049,7 @@ export class PDFDocumentProxy {
  * @property {string} fontName - Font name used by PDF.js for converted font.
  * @property {boolean} hasEOL - Indicating if the text content is followed by a
  *   line-break.
- * @property {Array<number,number,number>} color - An RGB representation of the
- *  text color.
+ * @property {[number,number,number]} colorFill - Color of the text.
  */
 /**
  * Page text marked content part.

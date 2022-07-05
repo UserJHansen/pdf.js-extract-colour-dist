@@ -165,7 +165,7 @@ var WorkerMessageHandler = /*#__PURE__*/function () {
       var WorkerTasks = [];
       var verbosity = (0, _util.getVerbosityLevel)();
       var apiVersion = docParams.apiVersion;
-      var workerVersion = '2.15.209';
+      var workerVersion = '2.15.220';
 
       if (apiVersion !== workerVersion) {
         throw new Error("The API version \"".concat(apiVersion, "\" does not match ") + "the Worker version \"".concat(workerVersion, "\"."));
@@ -29568,6 +29568,20 @@ var _operator_list = __w_pdfjs_require__(187);
 
 var _image = __w_pdfjs_require__(188);
 
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -31634,6 +31648,10 @@ var PartialEvaluator = /*#__PURE__*/function () {
               fn = _util.OPS.showText;
               break;
 
+            case _util.OPS.setTextRenderingMode:
+              stateManager.state.textRenderingMode = args[0];
+              break;
+
             case _util.OPS.setFillColorSpace:
               {
                 var cachedColorSpace = _colorspace.ColorSpace.getCached(args[0], xref, localColorSpaceCache);
@@ -31964,9 +31982,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
         notASpace: -Infinity,
         transform: null,
         fontName: null,
-        hasEOL: false,
-        color: [0, 0, 0],
-        colorSpace: _colorspace.ColorSpace.singletons.gray
+        hasEOL: false
       };
       var twoLastChars = [" ", " "];
       var twoLastCharsPos = 0;
@@ -31995,7 +32011,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
       var xobjs = null;
       var emptyXObjectCache = new _image_utils.LocalImageCache();
       var emptyGStateCache = new _image_utils.LocalGStateCache();
-      var preprocessor = new EvaluatorPreprocessor(stream, xref, stateManager);
+      var preprocessor = new CustomEvaluatorPreprocessor(stream, xref, stateManager, resources);
       var textState;
 
       function getCurrentTextTransform() {
@@ -32032,6 +32048,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
         }
 
         textContentItem.fontName = loadedName;
+        textContentItem.color = stateManager.state.fillColor;
         var trm = textContentItem.transform = getCurrentTextTransform();
 
         if (!font.vertical) {
@@ -32230,8 +32247,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
                 height: Math.abs(_advanceY),
                 transform: textContentItem.prevTransform,
                 fontName: textContentItem.fontName,
-                hasEOL: false,
-                color: textState.fillColor
+                hasEOL: false
               });
             } else {
               textContentItem.height += _advanceY;
@@ -32277,8 +32293,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
               height: 0,
               transform: textContentItem.prevTransform,
               fontName: textContentItem.fontName,
-              hasEOL: false,
-              color: textState.fillColor
+              hasEOL: false
             });
           } else {
             textContentItem.width += advanceX;
@@ -32398,8 +32413,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
             height: 0,
             transform: getCurrentTextTransform(),
             fontName: textState.font.loadedName,
-            hasEOL: true,
-            color: textState.fillColor
+            hasEOL: true
           });
         }
       }
@@ -32431,8 +32445,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
           height: Math.abs(height),
           transform: transf || getCurrentTextTransform(),
           fontName: fontName,
-          hasEOL: false,
-          color: textState.fillColor
+          hasEOL: false
         });
         return true;
       }
@@ -32448,7 +32461,6 @@ var PartialEvaluator = /*#__PURE__*/function () {
           textContentItem.totalHeight += textContentItem.height * textContentItem.textAdvanceScale;
         }
 
-        textContentItem.color = textState.fillColor;
         textContent.items.push(runBidiTransform(textContentItem));
         textContentItem.initialized = false;
         textContentItem.str.length = 0;
@@ -32488,7 +32500,6 @@ var PartialEvaluator = /*#__PURE__*/function () {
         timeSlotManager.reset();
         var operation = {};
         var stop,
-            cs,
             args = [];
 
         while (!(stop = timeSlotManager.check())) {
@@ -32503,50 +32514,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
           var fn = operation.fn;
           args = operation.args;
 
-          var _localColorSpaceCache = new _image_utils.LocalColorSpaceCache();
-
           switch (fn | 0) {
-            case _util.OPS.setFillColorSpace:
-              {
-                var cachedColorSpace = _colorspace.ColorSpace.getCached(args[0], xref, _localColorSpaceCache);
-
-                if (cachedColorSpace) {
-                  stateManager.state.fillColorSpace = cachedColorSpace;
-                  continue;
-                }
-
-                next(self.parseColorSpace({
-                  cs: args[0],
-                  resources: resources,
-                  localColorSpaceCache: _localColorSpaceCache
-                }).then(function (colorSpace) {
-                  if (colorSpace) {
-                    textState.fillColorSpace = colorSpace;
-                  }
-                }));
-                return;
-              }
-
-            case _util.OPS.setFillColor:
-              cs = stateManager.state.fillColorSpace;
-              textState.fillColor = cs.getRgb(args, 0);
-              break;
-
-            case _util.OPS.setFillGray:
-              stateManager.state.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
-              textState.fillColor = _colorspace.ColorSpace.singletons.gray.getRgb(args, 0);
-              break;
-
-            case _util.OPS.setFillCMYKColor:
-              stateManager.state.fillColorSpace = _colorspace.ColorSpace.singletons.cmyk;
-              textState.fillColor = _colorspace.ColorSpace.singletons.cmyk.getRgb(args, 0);
-              break;
-
-            case _util.OPS.setFillRGBColor:
-              stateManager.state.fillColorSpace = _colorspace.ColorSpace.singletons.rgb;
-              textState.fillColor = _colorspace.ColorSpace.singletons.rgb.getRgb(args, 0);
-              break;
-
             case _util.OPS.setFont:
               var fontNameArg = args[0].name,
                   fontSizeArg = args[1];
@@ -34297,8 +34265,6 @@ var TextState = /*#__PURE__*/function () {
     this.leading = 0;
     this.textHScale = 1;
     this.textRise = 0;
-    this.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
-    this.fillColor = [0, 0, 0];
   }
 
   _createClass(TextState, [{
@@ -34897,6 +34863,59 @@ var EvaluatorPreprocessor = /*#__PURE__*/function () {
 }();
 
 exports.EvaluatorPreprocessor = EvaluatorPreprocessor;
+
+var CustomEvaluatorPreprocessor = /*#__PURE__*/function (_EvaluatorPreprocesso) {
+  _inherits(CustomEvaluatorPreprocessor, _EvaluatorPreprocesso);
+
+  var _super = _createSuper(CustomEvaluatorPreprocessor);
+
+  function CustomEvaluatorPreprocessor(stream, xref, stateManager, resources) {
+    var _this13;
+
+    _classCallCheck(this, CustomEvaluatorPreprocessor);
+
+    _this13 = _super.call(this, stream, xref, stateManager);
+    _this13.resources = resources;
+    _this13.xref = xref;
+    var state = _this13.stateManager.state;
+    state.textRenderingMode = _util.TextRenderingMode.FILL;
+    state.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
+    state.fillColor = [0, 0, 0];
+    return _this13;
+  }
+
+  _createClass(CustomEvaluatorPreprocessor, null, [{
+    key: "preprocessCommand",
+    value: function preprocessCommand(fn, args) {
+      EvaluatorPreprocessor.prototype.preprocessCommand.call(this, fn, args);
+      var state = this.stateManager.state;
+
+      switch (fn) {
+        case _util.OPS.setFillColor:
+          var cs = state.fillColorSpace;
+          state.fillColor = cs.getRgb(args, 0);
+          break;
+
+        case _util.OPS.setFillGray:
+          state.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
+          state.fillColor = _colorspace.ColorSpace.singletons.gray.getRgb(args, 0);
+          break;
+
+        case _util.OPS.setFillCMYKColor:
+          state.fillColorSpace = _colorspace.ColorSpace.singletons.cmyk;
+          state.fillColor = _colorspace.ColorSpace.singletons.cmyk.getRgb(args, 0);
+          break;
+
+        case _util.OPS.setFillRGBColor:
+          state.fillColorSpace = _colorspace.ColorSpace.singletons.rgb;
+          state.fillColor = _colorspace.ColorSpace.singletons.rgb.getRgb(args, 0);
+          break;
+      }
+    }
+  }]);
+
+  return CustomEvaluatorPreprocessor;
+}(EvaluatorPreprocessor);
 
 /***/ }),
 /* 151 */
@@ -92848,8 +92867,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-var pdfjsVersion = '2.15.209';
-var pdfjsBuild = '90f3b43a3';
+var pdfjsVersion = '2.15.220';
+var pdfjsBuild = 'a1ac1a61b';
 })();
 
 /******/ 	return __webpack_exports__;
