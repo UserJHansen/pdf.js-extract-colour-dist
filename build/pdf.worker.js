@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.15.220';
+    const workerVersion = '2.15.222';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -24770,7 +24770,8 @@ class PartialEvaluator {
       notASpace: -Infinity,
       transform: null,
       fontName: null,
-      hasEOL: false
+      hasEOL: false,
+      fillColor: stateManager.state.fillColor
     };
     const twoLastChars = [" ", " "];
     let twoLastCharsPos = 0;
@@ -24819,6 +24820,7 @@ class PartialEvaluator {
 
     function ensureTextContentItem() {
       if (textContentItem.initialized) {
+        textContentItem.fillColor = stateManager.state.fillColor;
         return textContentItem;
       }
 
@@ -24836,7 +24838,6 @@ class PartialEvaluator {
       }
 
       textContentItem.fontName = loadedName;
-      textContentItem.color = stateManager.state.fillColor;
       const trm = textContentItem.transform = getCurrentTextTransform();
 
       if (!font.vertical) {
@@ -24858,6 +24859,7 @@ class PartialEvaluator {
       textContentItem.spaceInFlowMin = textState.fontSize * SPACE_IN_FLOW_MIN_FACTOR;
       textContentItem.spaceInFlowMax = textState.fontSize * SPACE_IN_FLOW_MAX_FACTOR;
       textContentItem.hasEOL = false;
+      textContentItem.fillColor = stateManager.state.fillColor;
       textContentItem.initialized = true;
       return textContentItem;
     }
@@ -24896,7 +24898,8 @@ class PartialEvaluator {
         height: Math.abs(textChunk.totalHeight),
         transform: textChunk.transform,
         fontName: textChunk.fontName,
-        hasEOL: textChunk.hasEOL
+        hasEOL: textChunk.hasEOL,
+        fillColor: textState.fillColor
       };
     }
 
@@ -25010,7 +25013,8 @@ class PartialEvaluator {
               height: Math.abs(advanceY),
               transform: textContentItem.prevTransform,
               fontName: textContentItem.fontName,
-              hasEOL: false
+              hasEOL: false,
+              fillColor: textState.fillColor
             });
           } else {
             textContentItem.height += advanceY;
@@ -25056,7 +25060,8 @@ class PartialEvaluator {
             height: 0,
             transform: textContentItem.prevTransform,
             fontName: textContentItem.fontName,
-            hasEOL: false
+            hasEOL: false,
+            fillColor: textState.fillColor
           });
         } else {
           textContentItem.width += advanceX;
@@ -25176,7 +25181,8 @@ class PartialEvaluator {
           height: 0,
           transform: getCurrentTextTransform(),
           fontName: textState.font.loadedName,
-          hasEOL: true
+          hasEOL: true,
+          fillColor: textState.fillColor
         });
       }
     }
@@ -25208,7 +25214,8 @@ class PartialEvaluator {
         height: Math.abs(height),
         transform: transf || getCurrentTextTransform(),
         fontName,
-        hasEOL: false
+        hasEOL: false,
+        fillColor: textState.fillColor
       });
       return true;
     }
@@ -25463,6 +25470,23 @@ class PartialEvaluator {
 
               if (!(type instanceof _primitives.Name)) {
                 throw new _util.FormatError("XObject should have a Name subtype");
+              }
+
+              if (type.name === "Image") {
+                const width = xobj.dict.get("Width", 0),
+                      height = xobj.dict.get("Height", 0);
+                resetLastChars();
+                flushTextContentItem();
+                textContent.items.push({
+                  str: "IMAGEIMAGEIMAGE",
+                  dir: "ltr",
+                  width,
+                  height,
+                  transform: textState.textMatrix,
+                  fontName: "IMAGEIMAGEIMAGE",
+                  hasEOL: false,
+                  fillColor: textState.fillColor
+                });
               }
 
               if (type.name !== "Form") {
@@ -27357,7 +27381,7 @@ class CustomEvaluatorPreprocessor extends EvaluatorPreprocessor {
     state.fillColor = [0, 0, 0];
   }
 
-  static preprocessCommand(fn, args) {
+  preprocessCommand(fn, args) {
     EvaluatorPreprocessor.prototype.preprocessCommand.call(this, fn, args);
     var state = this.stateManager.state;
 
@@ -75213,8 +75237,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.220';
-const pdfjsBuild = 'a1ac1a61b';
+const pdfjsVersion = '2.15.222';
+const pdfjsBuild = 'c1201838f';
 })();
 
 /******/ 	return __webpack_exports__;

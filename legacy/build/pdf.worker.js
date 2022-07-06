@@ -165,7 +165,7 @@ var WorkerMessageHandler = /*#__PURE__*/function () {
       var WorkerTasks = [];
       var verbosity = (0, _util.getVerbosityLevel)();
       var apiVersion = docParams.apiVersion;
-      var workerVersion = '2.15.220';
+      var workerVersion = '2.15.222';
 
       if (apiVersion !== workerVersion) {
         throw new Error("The API version \"".concat(apiVersion, "\" does not match ") + "the Worker version \"".concat(workerVersion, "\"."));
@@ -31982,7 +31982,8 @@ var PartialEvaluator = /*#__PURE__*/function () {
         notASpace: -Infinity,
         transform: null,
         fontName: null,
-        hasEOL: false
+        hasEOL: false,
+        fillColor: stateManager.state.fillColor
       };
       var twoLastChars = [" ", " "];
       var twoLastCharsPos = 0;
@@ -32031,6 +32032,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
 
       function ensureTextContentItem() {
         if (textContentItem.initialized) {
+          textContentItem.fillColor = stateManager.state.fillColor;
           return textContentItem;
         }
 
@@ -32048,7 +32050,6 @@ var PartialEvaluator = /*#__PURE__*/function () {
         }
 
         textContentItem.fontName = loadedName;
-        textContentItem.color = stateManager.state.fillColor;
         var trm = textContentItem.transform = getCurrentTextTransform();
 
         if (!font.vertical) {
@@ -32070,6 +32071,7 @@ var PartialEvaluator = /*#__PURE__*/function () {
         textContentItem.spaceInFlowMin = textState.fontSize * SPACE_IN_FLOW_MIN_FACTOR;
         textContentItem.spaceInFlowMax = textState.fontSize * SPACE_IN_FLOW_MAX_FACTOR;
         textContentItem.hasEOL = false;
+        textContentItem.fillColor = stateManager.state.fillColor;
         textContentItem.initialized = true;
         return textContentItem;
       }
@@ -32108,7 +32110,8 @@ var PartialEvaluator = /*#__PURE__*/function () {
           height: Math.abs(textChunk.totalHeight),
           transform: textChunk.transform,
           fontName: textChunk.fontName,
-          hasEOL: textChunk.hasEOL
+          hasEOL: textChunk.hasEOL,
+          fillColor: textState.fillColor
         };
       }
 
@@ -32247,7 +32250,8 @@ var PartialEvaluator = /*#__PURE__*/function () {
                 height: Math.abs(_advanceY),
                 transform: textContentItem.prevTransform,
                 fontName: textContentItem.fontName,
-                hasEOL: false
+                hasEOL: false,
+                fillColor: textState.fillColor
               });
             } else {
               textContentItem.height += _advanceY;
@@ -32293,7 +32297,8 @@ var PartialEvaluator = /*#__PURE__*/function () {
               height: 0,
               transform: textContentItem.prevTransform,
               fontName: textContentItem.fontName,
-              hasEOL: false
+              hasEOL: false,
+              fillColor: textState.fillColor
             });
           } else {
             textContentItem.width += advanceX;
@@ -32413,7 +32418,8 @@ var PartialEvaluator = /*#__PURE__*/function () {
             height: 0,
             transform: getCurrentTextTransform(),
             fontName: textState.font.loadedName,
-            hasEOL: true
+            hasEOL: true,
+            fillColor: textState.fillColor
           });
         }
       }
@@ -32445,7 +32451,8 @@ var PartialEvaluator = /*#__PURE__*/function () {
           height: Math.abs(height),
           transform: transf || getCurrentTextTransform(),
           fontName: fontName,
-          hasEOL: false
+          hasEOL: false,
+          fillColor: textState.fillColor
         });
         return true;
       }
@@ -32702,6 +32709,23 @@ var PartialEvaluator = /*#__PURE__*/function () {
 
                 if (!(type instanceof _primitives.Name)) {
                   throw new _util.FormatError("XObject should have a Name subtype");
+                }
+
+                if (type.name === "Image") {
+                  var width = xobj.dict.get("Width", 0),
+                      height = xobj.dict.get("Height", 0);
+                  resetLastChars();
+                  flushTextContentItem();
+                  textContent.items.push({
+                    str: "IMAGEIMAGEIMAGE",
+                    dir: "ltr",
+                    width: width,
+                    height: height,
+                    transform: textState.textMatrix,
+                    fontName: "IMAGEIMAGEIMAGE",
+                    hasEOL: false,
+                    fillColor: textState.fillColor
+                  });
                 }
 
                 if (type.name !== "Form") {
@@ -34884,7 +34908,7 @@ var CustomEvaluatorPreprocessor = /*#__PURE__*/function (_EvaluatorPreprocesso) 
     return _this13;
   }
 
-  _createClass(CustomEvaluatorPreprocessor, null, [{
+  _createClass(CustomEvaluatorPreprocessor, [{
     key: "preprocessCommand",
     value: function preprocessCommand(fn, args) {
       EvaluatorPreprocessor.prototype.preprocessCommand.call(this, fn, args);
@@ -92867,8 +92891,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-var pdfjsVersion = '2.15.220';
-var pdfjsBuild = 'a1ac1a61b';
+var pdfjsVersion = '2.15.222';
+var pdfjsBuild = 'c1201838f';
 })();
 
 /******/ 	return __webpack_exports__;
