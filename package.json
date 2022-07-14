@@ -1,6 +1,6 @@
 {
   "name": "pdfjs-color-dist",
-  "version": "2.15.222-2",
+  "version": "2.15.223",
   "main": "build/pdf.js",
   "types": "types/src/pdf.d.ts",
   "description": "Modification of pdf.js that returns the color in gettextcontent.",
