@@ -295,7 +295,7 @@ export type TextItem = {
     /**
      * - Color of the text.
      */
-    colorFill: [number, number, number];
+    fillColor: [number, number, number];
 };
 /**
  * Page text marked content part.
@@ -1049,7 +1049,7 @@ export class PDFDocumentProxy {
  * @property {string} fontName - Font name used by PDF.js for converted font.
  * @property {boolean} hasEOL - Indicating if the text content is followed by a
  *   line-break.
- * @property {[number,number,number]} colorFill - Color of the text.
+ * @property {[number,number,number]} fillColor - Color of the text.
  */
 /**
  * Page text marked content part.

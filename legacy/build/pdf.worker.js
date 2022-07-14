@@ -165,7 +165,7 @@ var WorkerMessageHandler = /*#__PURE__*/function () {
       var WorkerTasks = [];
       var verbosity = (0, _util.getVerbosityLevel)();
       var apiVersion = docParams.apiVersion;
-      var workerVersion = '2.15.222';
+      var workerVersion = '2.15.223';
 
       if (apiVersion !== workerVersion) {
         throw new Error("The API version \"".concat(apiVersion, "\" does not match ") + "the Worker version \"".concat(workerVersion, "\"."));
@@ -34904,7 +34904,7 @@ var CustomEvaluatorPreprocessor = /*#__PURE__*/function (_EvaluatorPreprocesso) 
     var state = _this13.stateManager.state;
     state.textRenderingMode = _util.TextRenderingMode.FILL;
     state.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
-    state.fillColor = [0, 0, 0];
+    state.fillColor = [41, 41, 41];
     return _this13;
   }
 
@@ -92891,8 +92891,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-var pdfjsVersion = '2.15.222';
-var pdfjsBuild = 'c1201838f';
+var pdfjsVersion = '2.15.223';
+var pdfjsBuild = '508ad7b10';
 })();
 
 /******/ 	return __webpack_exports__;

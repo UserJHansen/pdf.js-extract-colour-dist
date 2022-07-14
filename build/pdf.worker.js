@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.15.222';
+    const workerVersion = '2.15.223';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -27378,7 +27378,7 @@ class CustomEvaluatorPreprocessor extends EvaluatorPreprocessor {
     var state = this.stateManager.state;
     state.textRenderingMode = _util.TextRenderingMode.FILL;
     state.fillColorSpace = _colorspace.ColorSpace.singletons.gray;
-    state.fillColor = [0, 0, 0];
+    state.fillColor = [41, 41, 41];
   }
 
   preprocessCommand(fn, args) {
@@ -75237,8 +75237,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.222';
-const pdfjsBuild = 'c1201838f';
+const pdfjsVersion = '2.15.223';
+const pdfjsBuild = '508ad7b10';
 })();
 
 /******/ 	return __webpack_exports__;
