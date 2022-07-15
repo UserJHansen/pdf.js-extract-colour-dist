@@ -1,6 +1,6 @@
 {
-  "name": "pdfjs-dist",
-  "version": "2.15.223",
+  "name": "pdf.js-extract-colour-dist",
+  "version": "2.15.266",
   "main": [
     "build/pdf.js",
     "build/pdf.worker.js"
@@ -9,6 +9,7 @@
   "keywords": [
     "Mozilla",
     "pdf",
-    "pdf.js"
+    "pdf.js",
+    "color"
   ]
 }

@@ -10,6 +10,21 @@ export type AnnotationEditorLayer = import("./annotation_editor_layer.js").Annot
  */
 export class AnnotationEditorUIManager {
     constructor(eventBus: any);
+    destroy(): void;
+    /**
+     * Execute an action for a given name.
+     * For example, the user can click on the "Undo" entry in the context menu
+     * and it'll trigger the undo action.
+     * @param {Object} details
+     */
+    onEditingAction(details: Object): void;
+    /**
+     * Set the editing state.
+     * It can be useful to temporarily disable it when the user is editing a
+     * FreeText annotation.
+     * @param {boolean} isEditing
+     */
+    setEditingState(isEditing: boolean): void;
     registerEditorTypes(types: any): void;
     /**
      * Get an id.
@@ -98,25 +113,22 @@ export class AnnotationEditorUIManager {
      */
     unselect(): void;
     /**
-     * Suppress some editors from the given layer.
-     * @param {AnnotationEditorLayer} layer
+     * Delete the current editor or all.
      */
-    suppress(layer: AnnotationEditorLayer): void;
+    delete(): void;
     /**
      * Copy the selected editor.
      */
     copy(): void;
     /**
      * Cut the selected editor.
-     * @param {AnnotationEditorLayer}
      */
-    cut(layer: any): void;
+    cut(): void;
     /**
      * Paste a previously copied editor.
-     * @param {AnnotationEditorLayer}
      * @returns {undefined}
      */
-    paste(layer: any): undefined;
+    paste(): undefined;
     /**
      * Select all the editors.
      */

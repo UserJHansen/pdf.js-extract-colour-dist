@@ -44,12 +44,13 @@ export class AnnotationEditorLayer {
      * The mode has changed: it must be updated.
      * @param {number} mode
      */
-    updateMode(mode: number): void;
+    updateMode(mode?: number): void;
+    addInkEditorIfNeeded(isCommitting: any): void;
     /**
-     * Mouseover callback.
-     * @param {MouseEvent} event
+     * Set the editing state.
+     * @param {boolean} isEditing
      */
-    mouseover(event: MouseEvent): void;
+    setEditingState(isEditing: boolean): void;
     /**
      * Add some commands into the CommandManager (undo/redo stuff).
      * @param {Object} params
@@ -67,7 +68,7 @@ export class AnnotationEditorLayer {
      * Suppress the selected editor or all editors.
      * @returns {undefined}
      */
-    suppress(): undefined;
+    delete(): undefined;
     /**
      * Copy the selected editor.
      */

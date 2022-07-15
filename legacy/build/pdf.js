@@ -24,11 +24,11 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define("pdfjs-dist/build/pdf", [], factory);
+		define("pdf.js-extract-colour-dist/build/pdf", [], factory);
 	else if(typeof exports === 'object')
-		exports["pdfjs-dist/build/pdf"] = factory();
+		exports["pdf.js-extract-colour-dist/build/pdf"] = factory();
 	else
-		root["pdfjs-dist/build/pdf"] = root.pdfjsLib = factory();
+		root["pdf.js-extract-colour-dist/build/pdf"] = root.pdfjsLib = factory();
 })(globalThis, () => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ([
@@ -1802,10 +1802,10 @@ var store = __w_pdfjs_require__(38);
 (module.exports = function (key, value) {
  return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
- version: '3.23.2',
+ version: '3.23.4',
  mode: IS_PURE ? 'pure' : 'global',
  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
- license: 'https://github.com/zloirock/core-js/blob/v3.23.2/LICENSE',
+ license: 'https://github.com/zloirock/core-js/blob/v3.23.4/LICENSE',
  source: 'https://github.com/zloirock/core-js'
 });
 
@@ -2013,10 +2013,13 @@ module.exports = function (O, key, value, options) {
   else
    defineGlobalProperty(key, value);
  } else {
-  if (!options.unsafe)
-   delete O[key];
-  else if (O[key])
-   simple = true;
+  try {
+   if (!options.unsafe)
+    delete O[key];
+   else if (O[key])
+    simple = true;
+  } catch (error) {
+  }
   if (simple)
    O[key] = value;
   else
@@ -2058,10 +2061,13 @@ var makeBuiltIn = module.exports = function (value, name, options) {
  if (options && options.setter)
   name = 'set ' + name;
  if (!hasOwn(value, 'name') || CONFIGURABLE_FUNCTION_NAME && value.name !== name) {
-  defineProperty(value, 'name', {
-   value: name,
-   configurable: true
-  });
+  if (DESCRIPTORS)
+   defineProperty(value, 'name', {
+    value: name,
+    configurable: true
+   });
+  else
+   value.name = name;
  }
  if (CONFIGURABLE_LENGTH && options && hasOwn(options, 'arity') && value.length !== options.arity) {
   defineProperty(value, 'length', { value: options.arity });
@@ -3513,6 +3519,7 @@ var ResultPrototype = Result.prototype;
 module.exports = function (iterable, unboundFunction, options) {
  var that = options && options.that;
  var AS_ENTRIES = !!(options && options.AS_ENTRIES);
+ var IS_RECORD = !!(options && options.IS_RECORD);
  var IS_ITERATOR = !!(options && options.IS_ITERATOR);
  var INTERRUPTED = !!(options && options.INTERRUPTED);
  var fn = bind(unboundFunction, that);
@@ -3529,7 +3536,9 @@ module.exports = function (iterable, unboundFunction, options) {
   }
   return INTERRUPTED ? fn(value, stop) : fn(value);
  };
- if (IS_ITERATOR) {
+ if (IS_RECORD) {
+  iterator = iterable.iterator;
+ } else if (IS_ITERATOR) {
   iterator = iterable;
  } else {
   iterFn = getIteratorMethod(iterable);
@@ -3545,7 +3554,7 @@ module.exports = function (iterable, unboundFunction, options) {
   }
   iterator = getIterator(iterable, iterFn);
  }
- next = iterator.next;
+ next = IS_RECORD ? iterable.next : iterator.next;
  while (!(step = call(next, iterator)).done) {
   try {
    result = callFn(step.value);
@@ -4050,7 +4059,7 @@ var checkErrorsCloning = function (structuredCloneImplementation, $Error) {
    a: error,
    b: error
   });
-  return !(test && test.a === test.b && test.a instanceof $Error);
+  return !(test && test.a === test.b && test.a instanceof $Error && test.stack === error.stack);
  });
 };
 var checkNewErrorsCloningSemantic = function (structuredCloneImplementation) {
@@ -4921,7 +4930,7 @@ function _fetchDocument2() {
             _context7.next = 5;
             return worker.messageHandler.sendWithPromise("GetDocRequest", {
               docId: docId,
-              apiVersion: '2.15.223',
+              apiVersion: '2.15.266',
               source: {
                 data: source.data,
                 url: source.url,
@@ -7788,9 +7797,9 @@ var _canvasInUse = {
   writable: true,
   value: new WeakSet()
 };
-var version = '2.15.223';
+var version = '2.15.266';
 exports.version = version;
-var build = '508ad7b10';
+var build = '9ee8021b8';
 exports.build = build;
 
 /***/ }),
@@ -7976,7 +7985,11 @@ var AnnotationStorage = /*#__PURE__*/function () {
               key = _step$value[0],
               val = _step$value[1];
 
-          clone.set(key, val instanceof _editor.AnnotationEditor ? val.serialize() : val);
+          var serialized = val instanceof _editor.AnnotationEditor ? val.serialize() : val;
+
+          if (serialized) {
+            clone.set(key, serialized);
+          }
         }
       } catch (err) {
         _iterator.e(err);
@@ -8084,9 +8097,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.AnnotationEditor = void 0;
 
-var _tools = __w_pdfjs_require__(132);
-
 var _util = __w_pdfjs_require__(1);
+
+var _tools = __w_pdfjs_require__(132);
 
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
@@ -8172,6 +8185,8 @@ var AnnotationEditor = /*#__PURE__*/function () {
   }, {
     key: "focusout",
     value: function focusout(event) {
+      var _target$id;
+
       if (!this.isAttachedToDOM) {
         return;
       }
@@ -8184,7 +8199,10 @@ var AnnotationEditor = /*#__PURE__*/function () {
 
       event.preventDefault();
       this.commitOrRemove();
-      this.parent.setActiveEditor(null);
+
+      if (!(target !== null && target !== void 0 && (_target$id = target.id) !== null && _target$id !== void 0 && _target$id.startsWith(_util.AnnotationEditorPrefix))) {
+        this.parent.setActiveEditor(null);
+      }
     }
   }, {
     key: "commitOrRemove",
@@ -8289,8 +8307,15 @@ var AnnotationEditor = /*#__PURE__*/function () {
           ty = _this$getInitialTrans2[1];
 
       this.translate(tx, ty);
-      (0, _tools.bindEvents)(this, this.div, ["dragstart", "focusin", "focusout"]);
+      (0, _tools.bindEvents)(this, this.div, ["dragstart", "focusin", "focusout", "mousedown"]);
       return this.div;
+    }
+  }, {
+    key: "mousedown",
+    value: function mousedown(event) {
+      if (event.button !== 0) {
+        event.preventDefault();
+      }
     }
   }, {
     key: "getRect",
@@ -8378,6 +8403,10 @@ var AnnotationEditor = /*#__PURE__*/function () {
   }, {
     key: "remove",
     value: function remove() {
+      if (!this.isEmpty()) {
+        this.commit();
+      }
+
       this.parent.remove(this);
     }
   }, {
@@ -8646,6 +8675,27 @@ var CommandManager = /*#__PURE__*/function () {
         _classPrivateFieldSet(this, _position, next);
       }
     }
+  }, {
+    key: "hasSomethingToUndo",
+    value: function hasSomethingToUndo() {
+      return !isNaN(_classPrivateFieldGet(this, _position));
+    }
+  }, {
+    key: "hasSomethingToRedo",
+    value: function hasSomethingToRedo() {
+      if (isNaN(_classPrivateFieldGet(this, _position)) && _classPrivateFieldGet(this, _start) < _classPrivateFieldGet(this, _commands).length) {
+        return true;
+      }
+
+      var next = (_classPrivateFieldGet(this, _position) + 1) % _classPrivateFieldGet(this, _maxSize);
+
+      return next !== _classPrivateFieldGet(this, _start) && next < _classPrivateFieldGet(this, _commands).length;
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      _classPrivateFieldSet(this, _commands, null);
+    }
   }]);
 
   return CommandManager;
@@ -8798,6 +8848,16 @@ var ClipboardManager = /*#__PURE__*/function () {
 
       return ((_this$element = this.element) === null || _this$element === void 0 ? void 0 : _this$element.copy()) || null;
     }
+  }, {
+    key: "isEmpty",
+    value: function isEmpty() {
+      return this.element === null;
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      this.element = null;
+    }
   }]);
 
   return ClipboardManager;
@@ -8893,21 +8953,37 @@ var _mode = /*#__PURE__*/new WeakMap();
 
 var _previousActiveEditor = /*#__PURE__*/new WeakMap();
 
+var _boundOnEditingAction = /*#__PURE__*/new WeakMap();
+
+var _previousStates = /*#__PURE__*/new WeakMap();
+
+var _dispatchUpdateStates = /*#__PURE__*/new WeakSet();
+
 var _dispatchUpdateUI = /*#__PURE__*/new WeakSet();
 
 var _enableAll = /*#__PURE__*/new WeakSet();
 
 var _disableAll = /*#__PURE__*/new WeakSet();
 
+var _addEditorToLayer = /*#__PURE__*/new WeakSet();
+
+var _isEmpty = /*#__PURE__*/new WeakSet();
+
 var AnnotationEditorUIManager = /*#__PURE__*/function () {
   function AnnotationEditorUIManager(eventBus) {
     _classCallCheck(this, AnnotationEditorUIManager);
+
+    _classPrivateMethodInitSpec(this, _isEmpty);
+
+    _classPrivateMethodInitSpec(this, _addEditorToLayer);
 
     _classPrivateMethodInitSpec(this, _disableAll);
 
     _classPrivateMethodInitSpec(this, _enableAll);
 
     _classPrivateMethodInitSpec(this, _dispatchUpdateUI);
+
+    _classPrivateMethodInitSpec(this, _dispatchUpdateStates);
 
     _classPrivateFieldInitSpec(this, _activeEditor, {
       writable: true,
@@ -8921,7 +8997,7 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
 
     _classPrivateFieldInitSpec(this, _allLayers, {
       writable: true,
-      value: new Set()
+      value: new Map()
     });
 
     _classPrivateFieldInitSpec(this, _allowClick, {
@@ -8974,27 +9050,100 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
       value: null
     });
 
+    _classPrivateFieldInitSpec(this, _boundOnEditingAction, {
+      writable: true,
+      value: this.onEditingAction.bind(this)
+    });
+
+    _classPrivateFieldInitSpec(this, _previousStates, {
+      writable: true,
+      value: {
+        isEditing: false,
+        isEmpty: true,
+        hasEmptyClipboard: true,
+        hasSomethingToUndo: false,
+        hasSomethingToRedo: false,
+        hasSelectedEditor: false
+      }
+    });
+
     _classPrivateFieldSet(this, _eventBus, eventBus);
+
+    _classPrivateFieldGet(this, _eventBus)._on("editingaction", _classPrivateFieldGet(this, _boundOnEditingAction));
   }
 
   _createClass(AnnotationEditorUIManager, [{
-    key: "registerEditorTypes",
-    value: function registerEditorTypes(types) {
-      _classPrivateFieldSet(this, _editorTypes, types);
+    key: "destroy",
+    value: function destroy() {
+      _classPrivateFieldGet(this, _eventBus)._off("editingaction", _classPrivateFieldGet(this, _boundOnEditingAction));
 
-      var _iterator5 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editorTypes)),
+      var _iterator5 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allLayers).values()),
           _step5;
 
       try {
         for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-          var editorType = _step5.value;
-
-          _classPrivateMethodGet(this, _dispatchUpdateUI, _dispatchUpdateUI2).call(this, editorType.defaultPropertiesToUpdate);
+          var layer = _step5.value;
+          layer.destroy();
         }
       } catch (err) {
         _iterator5.e(err);
       } finally {
         _iterator5.f();
+      }
+
+      _classPrivateFieldGet(this, _allLayers).clear();
+
+      _classPrivateFieldGet(this, _allEditors).clear();
+
+      _classPrivateFieldSet(this, _activeEditor, null);
+
+      _classPrivateFieldGet(this, _clipboardManager).destroy();
+
+      _classPrivateFieldGet(this, _commandManager).destroy();
+    }
+  }, {
+    key: "onEditingAction",
+    value: function onEditingAction(details) {
+      if (["undo", "redo", "cut", "copy", "paste", "delete", "selectAll"].includes(details.name)) {
+        this[details.name]();
+      }
+    }
+  }, {
+    key: "setEditingState",
+    value: function setEditingState(isEditing) {
+      if (isEditing) {
+        _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+          isEditing: _classPrivateFieldGet(this, _mode) !== _util.AnnotationEditorType.NONE,
+          isEmpty: _classPrivateMethodGet(this, _isEmpty, _isEmpty2).call(this),
+          hasSomethingToUndo: _classPrivateFieldGet(this, _commandManager).hasSomethingToUndo(),
+          hasSomethingToRedo: _classPrivateFieldGet(this, _commandManager).hasSomethingToRedo(),
+          hasSelectedEditor: false,
+          hasEmptyClipboard: _classPrivateFieldGet(this, _clipboardManager).isEmpty()
+        });
+      } else {
+        _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+          isEditing: false
+        });
+      }
+    }
+  }, {
+    key: "registerEditorTypes",
+    value: function registerEditorTypes(types) {
+      _classPrivateFieldSet(this, _editorTypes, types);
+
+      var _iterator6 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editorTypes)),
+          _step6;
+
+      try {
+        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+          var editorType = _step6.value;
+
+          _classPrivateMethodGet(this, _dispatchUpdateUI, _dispatchUpdateUI2).call(this, editorType.defaultPropertiesToUpdate);
+        }
+      } catch (err) {
+        _iterator6.e(err);
+      } finally {
+        _iterator6.f();
       }
     }
   }, {
@@ -9005,7 +9154,7 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
   }, {
     key: "addLayer",
     value: function addLayer(layer) {
-      _classPrivateFieldGet(this, _allLayers).add(layer);
+      _classPrivateFieldGet(this, _allLayers).set(layer.pageIndex, layer);
 
       if (_classPrivateFieldGet(this, _isEnabled)) {
         layer.enable();
@@ -9016,7 +9165,7 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
   }, {
     key: "removeLayer",
     value: function removeLayer(layer) {
-      _classPrivateFieldGet(this, _allLayers)["delete"](layer);
+      _classPrivateFieldGet(this, _allLayers)["delete"](layer.pageIndex);
     }
   }, {
     key: "updateMode",
@@ -9024,22 +9173,26 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
       _classPrivateFieldSet(this, _mode, mode);
 
       if (mode === _util.AnnotationEditorType.NONE) {
+        this.setEditingState(false);
+
         _classPrivateMethodGet(this, _disableAll, _disableAll2).call(this);
       } else {
+        this.setEditingState(true);
+
         _classPrivateMethodGet(this, _enableAll, _enableAll2).call(this);
 
-        var _iterator6 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allLayers)),
-            _step6;
+        var _iterator7 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allLayers).values()),
+            _step7;
 
         try {
-          for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-            var layer = _step6.value;
+          for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+            var layer = _step7.value;
             layer.updateMode(mode);
           }
         } catch (err) {
-          _iterator6.e(err);
+          _iterator7.e(err);
         } finally {
-          _iterator6.f();
+          _iterator7.f();
         }
       }
     }
@@ -9062,18 +9215,18 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
 
       (_ref2 = _classPrivateFieldGet(this, _activeEditor) || _classPrivateFieldGet(this, _previousActiveEditor)) === null || _ref2 === void 0 ? void 0 : _ref2.updateParams(type, value);
 
-      var _iterator7 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editorTypes)),
-          _step7;
+      var _iterator8 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editorTypes)),
+          _step8;
 
       try {
-        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-          var editorType = _step7.value;
+        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+          var editorType = _step8.value;
           editorType.updateDefaultParams(type, value);
         }
       } catch (err) {
-        _iterator7.e(err);
+        _iterator8.e(err);
       } finally {
-        _iterator7.f();
+        _iterator8.f();
       }
     }
   }, {
@@ -9081,21 +9234,21 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
     value: function getEditors(pageIndex) {
       var editors = [];
 
-      var _iterator8 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allEditors).values()),
-          _step8;
+      var _iterator9 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allEditors).values()),
+          _step9;
 
       try {
-        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-          var editor = _step8.value;
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var editor = _step9.value;
 
           if (editor.pageIndex === pageIndex) {
             editors.push(editor);
           }
         }
       } catch (err) {
-        _iterator8.e(err);
+        _iterator9.e(err);
       } finally {
-        _iterator8.f();
+        _iterator9.f();
       }
 
       return editors;
@@ -9128,23 +9281,31 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
 
       if (editor) {
         _classPrivateMethodGet(this, _dispatchUpdateUI, _dispatchUpdateUI2).call(this, editor.propertiesToUpdate);
+
+        _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+          hasSelectedEditor: true
+        });
       } else {
+        _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+          hasSelectedEditor: false
+        });
+
         if (_classPrivateFieldGet(this, _previousActiveEditor)) {
           _classPrivateMethodGet(this, _dispatchUpdateUI, _dispatchUpdateUI2).call(this, _classPrivateFieldGet(this, _previousActiveEditor).propertiesToUpdate);
         } else {
-          var _iterator9 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editorTypes)),
-              _step9;
+          var _iterator10 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editorTypes)),
+              _step10;
 
           try {
-            for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-              var editorType = _step9.value;
+            for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+              var editorType = _step10.value;
 
               _classPrivateMethodGet(this, _dispatchUpdateUI, _dispatchUpdateUI2).call(this, editorType.defaultPropertiesToUpdate);
             }
           } catch (err) {
-            _iterator9.e(err);
+            _iterator10.e(err);
           } finally {
-            _iterator9.f();
+            _iterator10.f();
           }
         }
       }
@@ -9153,16 +9314,34 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
     key: "undo",
     value: function undo() {
       _classPrivateFieldGet(this, _commandManager).undo();
+
+      _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+        hasSomethingToUndo: _classPrivateFieldGet(this, _commandManager).hasSomethingToUndo(),
+        hasSomethingToRedo: true,
+        isEmpty: _classPrivateMethodGet(this, _isEmpty, _isEmpty2).call(this)
+      });
     }
   }, {
     key: "redo",
     value: function redo() {
       _classPrivateFieldGet(this, _commandManager).redo();
+
+      _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+        hasSomethingToUndo: true,
+        hasSomethingToRedo: _classPrivateFieldGet(this, _commandManager).hasSomethingToRedo(),
+        isEmpty: _classPrivateMethodGet(this, _isEmpty, _isEmpty2).call(this)
+      });
     }
   }, {
     key: "addCommands",
     value: function addCommands(params) {
       _classPrivateFieldGet(this, _commandManager).add(params);
+
+      _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+        hasSomethingToUndo: true,
+        hasSomethingToRedo: false,
+        isEmpty: _classPrivateMethodGet(this, _isEmpty, _isEmpty2).call(this)
+      });
     }
   }, {
     key: "allowClick",
@@ -9182,42 +9361,48 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
       _classPrivateFieldSet(this, _allowClick, true);
     }
   }, {
-    key: "suppress",
-    value: function suppress(layer) {
+    key: "delete",
+    value: function _delete() {
+      var _this = this;
+
       var cmd, undo;
 
       if (_classPrivateFieldGet(this, _isAllSelected)) {
         var editors = Array.from(_classPrivateFieldGet(this, _allEditors).values());
 
         cmd = function cmd() {
-          var _iterator10 = _createForOfIteratorHelper(editors),
-              _step10;
-
-          try {
-            for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-              var editor = _step10.value;
-              editor.remove();
-            }
-          } catch (err) {
-            _iterator10.e(err);
-          } finally {
-            _iterator10.f();
-          }
-        };
-
-        undo = function undo() {
           var _iterator11 = _createForOfIteratorHelper(editors),
               _step11;
 
           try {
             for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
               var editor = _step11.value;
-              layer.addOrRebuild(editor);
+
+              if (!editor.isEmpty()) {
+                editor.remove();
+              }
             }
           } catch (err) {
             _iterator11.e(err);
           } finally {
             _iterator11.f();
+          }
+        };
+
+        undo = function undo() {
+          var _iterator12 = _createForOfIteratorHelper(editors),
+              _step12;
+
+          try {
+            for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+              var editor = _step12.value;
+
+              _classPrivateMethodGet(_this, _addEditorToLayer, _addEditorToLayer2).call(_this, editor);
+            }
+          } catch (err) {
+            _iterator12.e(err);
+          } finally {
+            _iterator12.f();
           }
         };
 
@@ -9238,7 +9423,7 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
         };
 
         undo = function undo() {
-          layer.addOrRebuild(editor);
+          _classPrivateMethodGet(_this, _addEditorToLayer, _addEditorToLayer2).call(_this, editor);
         };
       }
 
@@ -9253,11 +9438,17 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
     value: function copy() {
       if (_classPrivateFieldGet(this, _activeEditor)) {
         _classPrivateFieldGet(this, _clipboardManager).copy(_classPrivateFieldGet(this, _activeEditor));
+
+        _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+          hasEmptyClipboard: false
+        });
       }
     }
   }, {
     key: "cut",
-    value: function cut(layer) {
+    value: function cut() {
+      var _this2 = this;
+
       if (_classPrivateFieldGet(this, _activeEditor)) {
         _classPrivateFieldGet(this, _clipboardManager).copy(_classPrivateFieldGet(this, _activeEditor));
 
@@ -9268,7 +9459,7 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
         };
 
         var undo = function undo() {
-          layer.addOrRebuild(editor);
+          _classPrivateMethodGet(_this2, _addEditorToLayer, _addEditorToLayer2).call(_this2, editor);
         };
 
         this.addCommands({
@@ -9280,7 +9471,9 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
     }
   }, {
     key: "paste",
-    value: function paste(layer) {
+    value: function paste() {
+      var _this3 = this;
+
       var editor = _classPrivateFieldGet(this, _clipboardManager).paste();
 
       if (!editor) {
@@ -9288,7 +9481,7 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
       }
 
       var cmd = function cmd() {
-        layer.addOrRebuild(editor);
+        _classPrivateMethodGet(_this3, _addEditorToLayer, _addEditorToLayer2).call(_this3, editor);
       };
 
       var undo = function undo() {
@@ -9306,38 +9499,46 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
     value: function selectAll() {
       _classPrivateFieldSet(this, _isAllSelected, true);
 
-      var _iterator12 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allEditors).values()),
-          _step12;
-
-      try {
-        for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-          var editor = _step12.value;
-          editor.select();
-        }
-      } catch (err) {
-        _iterator12.e(err);
-      } finally {
-        _iterator12.f();
-      }
-    }
-  }, {
-    key: "unselectAll",
-    value: function unselectAll() {
-      _classPrivateFieldSet(this, _isAllSelected, false);
-
       var _iterator13 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allEditors).values()),
           _step13;
 
       try {
         for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
           var editor = _step13.value;
-          editor.unselect();
+          editor.select();
         }
       } catch (err) {
         _iterator13.e(err);
       } finally {
         _iterator13.f();
       }
+
+      _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+        hasSelectedEditor: true
+      });
+    }
+  }, {
+    key: "unselectAll",
+    value: function unselectAll() {
+      _classPrivateFieldSet(this, _isAllSelected, false);
+
+      var _iterator14 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allEditors).values()),
+          _step14;
+
+      try {
+        for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+          var editor = _step14.value;
+          editor.unselect();
+        }
+      } catch (err) {
+        _iterator14.e(err);
+      } finally {
+        _iterator14.f();
+      }
+
+      _classPrivateMethodGet(this, _dispatchUpdateStates, _dispatchUpdateStates2).call(this, {
+        hasSelectedEditor: this.hasActive()
+      });
     }
   }, {
     key: "isActive",
@@ -9366,6 +9567,25 @@ var AnnotationEditorUIManager = /*#__PURE__*/function () {
 
 exports.AnnotationEditorUIManager = AnnotationEditorUIManager;
 
+function _dispatchUpdateStates2(details) {
+  var _this4 = this;
+
+  var hasChanged = Object.entries(details).some(function (_ref3) {
+    var _ref4 = _slicedToArray(_ref3, 2),
+        key = _ref4[0],
+        value = _ref4[1];
+
+    return _classPrivateFieldGet(_this4, _previousStates)[key] !== value;
+  });
+
+  if (hasChanged) {
+    _classPrivateFieldGet(this, _eventBus).dispatch("annotationeditorstateschanged", {
+      source: this,
+      details: Object.assign(_classPrivateFieldGet(this, _previousStates), details)
+    });
+  }
+}
+
 function _dispatchUpdateUI2(details) {
   _classPrivateFieldGet(this, _eventBus).dispatch("annotationeditorparamschanged", {
     source: this,
@@ -9377,18 +9597,18 @@ function _enableAll2() {
   if (!_classPrivateFieldGet(this, _isEnabled)) {
     _classPrivateFieldSet(this, _isEnabled, true);
 
-    var _iterator14 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allLayers)),
-        _step14;
+    var _iterator15 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allLayers).values()),
+        _step15;
 
     try {
-      for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-        var layer = _step14.value;
+      for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+        var layer = _step15.value;
         layer.enable();
       }
     } catch (err) {
-      _iterator14.e(err);
+      _iterator15.e(err);
     } finally {
-      _iterator14.f();
+      _iterator15.f();
     }
   }
 }
@@ -9397,20 +9617,54 @@ function _disableAll2() {
   if (_classPrivateFieldGet(this, _isEnabled)) {
     _classPrivateFieldSet(this, _isEnabled, false);
 
-    var _iterator15 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allLayers)),
-        _step15;
+    var _iterator16 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allLayers).values()),
+        _step16;
 
     try {
-      for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-        var layer = _step15.value;
+      for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+        var layer = _step16.value;
         layer.disable();
       }
     } catch (err) {
-      _iterator15.e(err);
+      _iterator16.e(err);
     } finally {
-      _iterator15.f();
+      _iterator16.f();
     }
   }
+}
+
+function _addEditorToLayer2(editor) {
+  var layer = _classPrivateFieldGet(this, _allLayers).get(editor.pageIndex);
+
+  if (layer) {
+    layer.addOrRebuild(editor);
+  } else {
+    this.addEditor(editor);
+  }
+}
+
+function _isEmpty2() {
+  if (_classPrivateFieldGet(this, _allEditors).size === 0) {
+    return true;
+  }
+
+  if (_classPrivateFieldGet(this, _allEditors).size === 1) {
+    var _iterator17 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _allEditors).values()),
+        _step17;
+
+    try {
+      for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+        var editor = _step17.value;
+        return editor.isEmpty();
+      }
+    } catch (err) {
+      _iterator17.e(err);
+    } finally {
+      _iterator17.f();
+    }
+  }
+
+  return false;
 }
 
 /***/ }),
@@ -16947,9 +17201,9 @@ function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.
 
 var _boundClick = /*#__PURE__*/new WeakMap();
 
-var _boundMouseover = /*#__PURE__*/new WeakMap();
-
 var _editors = /*#__PURE__*/new WeakMap();
+
+var _isCleaningUp = /*#__PURE__*/new WeakMap();
 
 var _uiManager = /*#__PURE__*/new WeakMap();
 
@@ -16959,9 +17213,13 @@ var _createNewEditor = /*#__PURE__*/new WeakSet();
 
 var _createAndAddNewEditor = /*#__PURE__*/new WeakSet();
 
+var _cleanup = /*#__PURE__*/new WeakSet();
+
 var AnnotationEditorLayer = /*#__PURE__*/function () {
   function AnnotationEditorLayer(options) {
     _classCallCheck(this, AnnotationEditorLayer);
+
+    _classPrivateMethodInitSpec(this, _cleanup);
 
     _classPrivateMethodInitSpec(this, _createAndAddNewEditor);
 
@@ -16974,14 +17232,14 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(this, _boundMouseover, {
-      writable: true,
-      value: void 0
-    });
-
     _classPrivateFieldInitSpec(this, _editors, {
       writable: true,
       value: new Map()
+    });
+
+    _classPrivateFieldInitSpec(this, _isCleaningUp, {
+      writable: true,
+      value: false
     });
 
     _classPrivateFieldInitSpec(this, _uiManager, {
@@ -17004,8 +17262,6 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
     this.div = options.div;
 
     _classPrivateFieldSet(this, _boundClick, this.click.bind(this));
-
-    _classPrivateFieldSet(this, _boundMouseover, this.mouseover.bind(this));
 
     var _iterator = _createForOfIteratorHelper(_classPrivateFieldGet(this, _uiManager).getEditors(options.pageIndex)),
         _step;
@@ -17031,33 +17287,56 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
     }
   }, {
     key: "updateMode",
-    value: function updateMode(mode) {
-      switch (mode) {
-        case _util.AnnotationEditorType.INK:
-          this.div.addEventListener("mouseover", _classPrivateFieldGet(this, _boundMouseover));
-          this.div.removeEventListener("click", _classPrivateFieldGet(this, _boundClick));
-          break;
+    value: function updateMode() {
+      var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _classPrivateFieldGet(this, _uiManager).getMode();
 
-        case _util.AnnotationEditorType.FREETEXT:
-          this.div.removeEventListener("mouseover", _classPrivateFieldGet(this, _boundMouseover));
-          this.div.addEventListener("click", _classPrivateFieldGet(this, _boundClick));
-          break;
+      _classPrivateMethodGet(this, _cleanup, _cleanup2).call(this);
 
-        default:
-          this.div.removeEventListener("mouseover", _classPrivateFieldGet(this, _boundMouseover));
-          this.div.removeEventListener("click", _classPrivateFieldGet(this, _boundClick));
+      if (mode === _util.AnnotationEditorType.INK) {
+        this.addInkEditorIfNeeded(false);
       }
 
       this.setActiveEditor(null);
     }
   }, {
-    key: "mouseover",
-    value: function mouseover(event) {
-      if (event.target === this.div && event.buttons === 0 && !_classPrivateFieldGet(this, _uiManager).hasActive()) {
-        var editor = _classPrivateMethodGet(this, _createAndAddNewEditor, _createAndAddNewEditor2).call(this, event);
-
-        editor.setInBackground();
+    key: "addInkEditorIfNeeded",
+    value: function addInkEditorIfNeeded(isCommitting) {
+      if (!isCommitting && _classPrivateFieldGet(this, _uiManager).getMode() !== _util.AnnotationEditorType.INK) {
+        return;
       }
+
+      if (!isCommitting) {
+        var _iterator2 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editors).values()),
+            _step2;
+
+        try {
+          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+            var _editor = _step2.value;
+
+            if (_editor.isEmpty()) {
+              _editor.setInBackground();
+
+              return;
+            }
+          }
+        } catch (err) {
+          _iterator2.e(err);
+        } finally {
+          _iterator2.f();
+        }
+      }
+
+      var editor = _classPrivateMethodGet(this, _createAndAddNewEditor, _createAndAddNewEditor2).call(this, {
+        offsetX: 0,
+        offsetY: 0
+      });
+
+      editor.setInBackground();
+    }
+  }, {
+    key: "setEditingState",
+    value: function setEditingState(isEditing) {
+      _classPrivateFieldGet(this, _uiManager).setEditingState(isEditing);
     }
   }, {
     key: "addCommands",
@@ -17075,9 +17354,9 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
       _classPrivateFieldGet(this, _uiManager).redo();
     }
   }, {
-    key: "suppress",
-    value: function suppress() {
-      _classPrivateFieldGet(this, _uiManager).suppress();
+    key: "delete",
+    value: function _delete() {
+      _classPrivateFieldGet(this, _uiManager)["delete"]();
     }
   }, {
     key: "copy",
@@ -17087,12 +17366,12 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
   }, {
     key: "cut",
     value: function cut() {
-      _classPrivateFieldGet(this, _uiManager).cut(this);
+      _classPrivateFieldGet(this, _uiManager).cut();
     }
   }, {
     key: "paste",
     value: function paste() {
-      _classPrivateFieldGet(this, _uiManager).paste(this);
+      _classPrivateFieldGet(this, _uiManager).paste();
     }
   }, {
     key: "selectAll",
@@ -17129,11 +17408,12 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
         currentActive.commitOrRemove();
       }
 
+      _classPrivateFieldGet(this, _uiManager).allowClick = _classPrivateFieldGet(this, _uiManager).getMode() === _util.AnnotationEditorType.INK;
+
       if (editor) {
         this.unselectAll();
         this.div.removeEventListener("click", _classPrivateFieldGet(this, _boundClick));
       } else {
-        _classPrivateFieldGet(this, _uiManager).allowClick = _classPrivateFieldGet(this, _uiManager).getMode() === _util.AnnotationEditorType.INK;
         this.div.addEventListener("click", _classPrivateFieldGet(this, _boundClick));
       }
     }
@@ -17160,6 +17440,10 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
       if (_classPrivateFieldGet(this, _uiManager).isActive(editor) || _classPrivateFieldGet(this, _editors).size === 0) {
         this.setActiveEditor(null);
         _classPrivateFieldGet(this, _uiManager).allowClick = true;
+      }
+
+      if (!_classPrivateFieldGet(this, _isCleaningUp)) {
+        this.addInkEditorIfNeeded(false);
       }
     }
   }, {
@@ -17281,21 +17565,21 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
   }, {
     key: "destroy",
     value: function destroy() {
-      var _iterator2 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editors).values()),
-          _step2;
+      var _iterator3 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editors).values()),
+          _step3;
 
       try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var editor = _step2.value;
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var editor = _step3.value;
           editor.isAttachedToDOM = false;
           editor.div.remove();
           editor.parent = null;
           this.div = null;
         }
       } catch (err) {
-        _iterator2.e(err);
+        _iterator3.e(err);
       } finally {
-        _iterator2.f();
+        _iterator3.f();
       }
 
       _classPrivateFieldGet(this, _editors).clear();
@@ -17309,6 +17593,7 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
       (0, _tools.bindEvents)(this, this.div, ["dragover", "drop", "keydown"]);
       this.div.addEventListener("click", _classPrivateFieldGet(this, _boundClick));
       this.setDimensions();
+      this.updateMode();
     }
   }, {
     key: "update",
@@ -17316,6 +17601,7 @@ var AnnotationEditorLayer = /*#__PURE__*/function () {
       this.setActiveEditor(null);
       this.viewport = parameters.viewport;
       this.setDimensions();
+      this.updateMode();
     }
   }, {
     key: "scaleFactor",
@@ -17414,9 +17700,32 @@ function _createAndAddNewEditor2(event) {
   return editor;
 }
 
+function _cleanup2() {
+  _classPrivateFieldSet(this, _isCleaningUp, true);
+
+  var _iterator4 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _editors).values()),
+      _step4;
+
+  try {
+    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+      var editor = _step4.value;
+
+      if (editor.isEmpty()) {
+        editor.remove();
+      }
+    }
+  } catch (err) {
+    _iterator4.e(err);
+  } finally {
+    _iterator4.f();
+  }
+
+  _classPrivateFieldSet(this, _isCleaningUp, false);
+}
+
 _defineProperty(AnnotationEditorLayer, "_initialized", false);
 
-_defineProperty(AnnotationEditorLayer, "_keyboardManager", new _tools.KeyboardManager([[["ctrl+a", "mac+meta+a"], AnnotationEditorLayer.prototype.selectAll], [["ctrl+c", "mac+meta+c"], AnnotationEditorLayer.prototype.copy], [["ctrl+v", "mac+meta+v"], AnnotationEditorLayer.prototype.paste], [["ctrl+x", "mac+meta+x"], AnnotationEditorLayer.prototype.cut], [["ctrl+z", "mac+meta+z"], AnnotationEditorLayer.prototype.undo], [["ctrl+y", "ctrl+shift+Z", "mac+meta+shift+Z"], AnnotationEditorLayer.prototype.redo], [["ctrl+Backspace", "mac+Backspace", "mac+ctrl+Backspace", "mac+alt+Backspace"], AnnotationEditorLayer.prototype.suppress]]));
+_defineProperty(AnnotationEditorLayer, "_keyboardManager", new _tools.KeyboardManager([[["ctrl+a", "mac+meta+a"], AnnotationEditorLayer.prototype.selectAll], [["ctrl+c", "mac+meta+c"], AnnotationEditorLayer.prototype.copy], [["ctrl+v", "mac+meta+v"], AnnotationEditorLayer.prototype.paste], [["ctrl+x", "mac+meta+x"], AnnotationEditorLayer.prototype.cut], [["ctrl+z", "mac+meta+z"], AnnotationEditorLayer.prototype.undo], [["ctrl+y", "ctrl+shift+Z", "mac+meta+shift+Z"], AnnotationEditorLayer.prototype.redo], [["Backspace", "alt+Backspace", "ctrl+Backspace", "shift+Backspace", "mac+Backspace", "mac+alt+Backspace", "mac+ctrl+Backspace", "Delete", "ctrl+Delete", "shift+Delete"], AnnotationEditorLayer.prototype["delete"]]]));
 
 /***/ }),
 /* 148 */
@@ -17635,6 +17944,7 @@ var FreeTextEditor = /*#__PURE__*/function (_AnnotationEditor) {
   }, {
     key: "enableEditMode",
     value: function enableEditMode() {
+      this.parent.setEditingState(false);
       this.parent.updateToolbar(_util.AnnotationEditorType.FREETEXT);
 
       _get(_getPrototypeOf(FreeTextEditor.prototype), "enableEditMode", this).call(this);
@@ -17646,6 +17956,8 @@ var FreeTextEditor = /*#__PURE__*/function (_AnnotationEditor) {
   }, {
     key: "disableEditMode",
     value: function disableEditMode() {
+      this.parent.setEditingState(true);
+
       _get(_getPrototypeOf(FreeTextEditor.prototype), "disableEditMode", this).call(this);
 
       this.overlayDiv.classList.add("enabled");
@@ -17667,6 +17979,13 @@ var FreeTextEditor = /*#__PURE__*/function (_AnnotationEditor) {
     key: "isEmpty",
     value: function isEmpty() {
       return this.editorDiv.innerText.trim() === "";
+    }
+  }, {
+    key: "remove",
+    value: function remove() {
+      this.parent.setEditingState(true);
+
+      _get(_getPrototypeOf(FreeTextEditor.prototype), "remove", this).call(this);
     }
   }, {
     key: "commit",
@@ -17747,6 +18066,10 @@ var FreeTextEditor = /*#__PURE__*/function (_AnnotationEditor) {
   }, {
     key: "serialize",
     value: function serialize() {
+      if (this.isEmpty()) {
+        return null;
+      }
+
       var padding = FreeTextEditor._internalPadding * this.parent.scaleFactor;
       var rect = this.getRect(padding, padding);
 
@@ -17902,12 +18225,18 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.InkEditor = void 0;
+Object.defineProperty(exports, "fitCurve", ({
+  enumerable: true,
+  get: function get() {
+    return _pdfjsFitCurve.fitCurve;
+  }
+}));
 
 var _util = __w_pdfjs_require__(1);
 
 var _editor = __w_pdfjs_require__(131);
 
-var _fit_curve = __w_pdfjs_require__(150);
+var _pdfjsFitCurve = __w_pdfjs_require__(150);
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
@@ -17979,6 +18308,8 @@ function _classExtractFieldDescriptor(receiver, privateMap, action) { if (!priva
 
 function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
 
+var RESIZER_SIZE = 16;
+
 var _aspectRatio = /*#__PURE__*/new WeakMap();
 
 var _baseHeight = /*#__PURE__*/new WeakMap();
@@ -17994,6 +18325,8 @@ var _boundCanvasMouseup = /*#__PURE__*/new WeakMap();
 var _boundCanvasMousedown = /*#__PURE__*/new WeakMap();
 
 var _disableEditing = /*#__PURE__*/new WeakMap();
+
+var _isCanvasInitialized = /*#__PURE__*/new WeakMap();
 
 var _observer = /*#__PURE__*/new WeakMap();
 
@@ -18135,6 +18468,11 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
       value: false
     });
 
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _isCanvasInitialized, {
+      writable: true,
+      value: false
+    });
+
     _classPrivateFieldInitSpec(_assertThisInitialized(_this), _observer, {
       writable: true,
       value: null
@@ -18150,8 +18488,8 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
       value: 0
     });
 
-    _this.color = params.color || InkEditor._defaultColor || _editor.AnnotationEditor._defaultLineColor;
-    _this.thickness = params.thickness || InkEditor._defaultThickness;
+    _this.color = params.color || null;
+    _this.thickness = params.thickness || null;
     _this.paths = [];
     _this.bezierPath2D = [];
     _this.currentPath = [];
@@ -18252,7 +18590,11 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
         return;
       }
 
-      this.canvas.width = this.canvas.heigth = 0;
+      if (!this.isEmpty()) {
+        this.commit();
+      }
+
+      this.canvas.width = this.canvas.height = 0;
       this.canvas.remove();
       this.canvas = null;
 
@@ -18271,7 +18613,6 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
 
       _get(_getPrototypeOf(InkEditor.prototype), "enableEditMode", this).call(this);
 
-      this.canvas.style.cursor = "pointer";
       this.div.draggable = false;
       this.canvas.addEventListener("mousedown", _classPrivateFieldGet(this, _boundCanvasMousedown));
       this.canvas.addEventListener("mouseup", _classPrivateFieldGet(this, _boundCanvasMouseup));
@@ -18285,7 +18626,6 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
 
       _get(_getPrototypeOf(InkEditor.prototype), "disableEditMode", this).call(this);
 
-      this.canvas.style.cursor = "auto";
       this.div.draggable = !this.isEmpty();
       this.div.classList.remove("editing");
       this.canvas.removeEventListener("mousedown", _classPrivateFieldGet(this, _boundCanvasMousedown));
@@ -18295,12 +18635,11 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
     key: "onceAdded",
     value: function onceAdded() {
       this.div.draggable = !this.isEmpty();
-      this.div.focus();
     }
   }, {
     key: "isEmpty",
     value: function isEmpty() {
-      return this.paths.length === 0;
+      return this.paths.length === 0 || this.paths.length === 1 && this.paths[0].length === 0;
     }
   }, {
     key: "commit",
@@ -18317,6 +18656,8 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
       this.div.classList.add("disabled");
 
       _classPrivateMethodGet(this, _fitToContent, _fitToContent2).call(this);
+
+      this.parent.addInkEditorIfNeeded(true);
     }
   }, {
     key: "focusin",
@@ -18328,7 +18669,7 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
   }, {
     key: "canvasMousedown",
     value: function canvasMousedown(event) {
-      if (!this.isInEditMode() || _classPrivateFieldGet(this, _disableEditing)) {
+      if (event.button !== 0 || !this.isInEditMode() || _classPrivateFieldGet(this, _disableEditing)) {
         return;
       }
 
@@ -18349,6 +18690,10 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
   }, {
     key: "canvasMouseup",
     value: function canvasMouseup(event) {
+      if (event.button !== 0) {
+        return;
+      }
+
       if (this.isInEditMode() && this.currentPath.length !== 0) {
         event.stopPropagation();
 
@@ -18380,8 +18725,6 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
 
       _get(_getPrototypeOf(InkEditor.prototype), "render", this).call(this);
 
-      this.div.classList.add("editing");
-
       var _classPrivateMethodGe = _classPrivateMethodGet(this, _getInitialBBox, _getInitialBBox2).call(this),
           _classPrivateMethodGe2 = _slicedToArray(_classPrivateMethodGe, 4),
           x = _classPrivateMethodGe2[0],
@@ -18395,6 +18738,8 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
       _classPrivateMethodGet(this, _createCanvas, _createCanvas2).call(this);
 
       if (this.width) {
+        _classPrivateFieldSet(this, _isCanvasInitialized, true);
+
         var _this$parent$viewport = _slicedToArray(this.parent.viewportBaseDimensions, 2),
             parentWidth = _this$parent$viewport[0],
             parentHeight = _this$parent$viewport[1];
@@ -18407,6 +18752,9 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
         _classPrivateMethodGet(this, _redraw, _redraw2).call(this);
 
         this.div.classList.add("disabled");
+      } else {
+        this.div.classList.add("editing");
+        this.enableEditMode();
       }
 
       _classPrivateMethodGet(this, _createObserver, _createObserver2).call(this);
@@ -18429,7 +18777,7 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
 
       this.canvas.style.visibility = "hidden";
 
-      if (_classPrivateFieldGet(this, _aspectRatio)) {
+      if (_classPrivateFieldGet(this, _aspectRatio) && Math.abs(_classPrivateFieldGet(this, _aspectRatio) - width / height) > 1e-2) {
         height = Math.ceil(width / _classPrivateFieldGet(this, _aspectRatio));
         this.setDims(width, height);
       }
@@ -18460,6 +18808,10 @@ var InkEditor = /*#__PURE__*/function (_AnnotationEditor) {
   }, {
     key: "serialize",
     value: function serialize() {
+      if (this.isEmpty()) {
+        return null;
+      }
+
       var rect = this.getRect(0, 0);
       var height = this.rotation % 180 === 0 ? rect[3] - rect[1] : rect[2] - rect[0];
 
@@ -18574,6 +18926,15 @@ function _setStroke2() {
 }
 
 function _startDrawing2(x, y) {
+  if (!_classPrivateFieldGet(this, _isCanvasInitialized)) {
+    _classPrivateFieldSet(this, _isCanvasInitialized, true);
+
+    _classPrivateMethodGet(this, _setCanvasDims, _setCanvasDims2).call(this);
+
+    this.thickness || (this.thickness = InkEditor._defaultThickness);
+    this.color || (this.color = InkEditor._defaultColor || _editor.AnnotationEditor._defaultLineColor);
+  }
+
   this.currentPath.push([x, y]);
 
   _classPrivateMethodGet(this, _setStroke, _setStroke2).call(this);
@@ -18597,7 +18958,7 @@ function _stopDrawing2(x, y) {
   var bezier;
 
   if (this.currentPath.length !== 2 || this.currentPath[0][0] !== x || this.currentPath[0][1] !== y) {
-    bezier = (0, _fit_curve.fitCurve)(this.currentPath, 30, null);
+    bezier = (0, _pdfjsFitCurve.fitCurve)(this.currentPath, 30, null);
   } else {
     var xy = [x, y];
     bezier = [[xy, xy.slice(), xy.slice(), xy]];
@@ -18685,6 +19046,7 @@ function _endDrawing2(event) {
 
 function _createCanvas2() {
   this.canvas = document.createElement("canvas");
+  this.canvas.width = this.canvas.height = 0;
   this.canvas.className = "inkEditorCanvas";
   this.div.append(this.canvas);
   this.ctx = this.canvas.getContext("2d");
@@ -18705,6 +19067,10 @@ function _createObserver2() {
 }
 
 function _setCanvasDims2() {
+  if (!_classPrivateFieldGet(this, _isCanvasInitialized)) {
+    return;
+  }
+
   var _this$parent$viewport5 = _slicedToArray(this.parent.viewportBaseDimensions, 2),
       parentWidth = _this$parent$viewport5[0],
       parentHeight = _this$parent$viewport5[1];
@@ -18912,6 +19278,16 @@ function _fitToContent2() {
 
   _classPrivateFieldSet(this, _aspectRatio, width / height);
 
+  var style = this.div.style;
+
+  if (_classPrivateFieldGet(this, _aspectRatio) >= 1) {
+    style.minHeight = "".concat(RESIZER_SIZE, "px");
+    style.minWidth = "".concat(Math.round(_classPrivateFieldGet(this, _aspectRatio) * RESIZER_SIZE), "px");
+  } else {
+    style.minWidth = "".concat(RESIZER_SIZE, "px");
+    style.minHeight = "".concat(Math.round(RESIZER_SIZE / _classPrivateFieldGet(this, _aspectRatio)), "px");
+  }
+
   var prevTranslationX = this.translationX;
   var prevTranslationY = this.translationY;
   this.translationX = -bbox[0];
@@ -18920,6 +19296,10 @@ function _fitToContent2() {
   _classPrivateMethodGet(this, _setCanvasDims, _setCanvasDims2).call(this);
 
   _classPrivateMethodGet(this, _redraw, _redraw2).call(this);
+
+  _classPrivateFieldSet(this, _realWidth, width);
+
+  _classPrivateFieldSet(this, _realHeight, height);
 
   this.setDims(width, height);
   this.translate(prevTranslationX - this.translationX, prevTranslationY - this.translationY);
@@ -18931,7 +19311,7 @@ _defineProperty(InkEditor, "_defaultThickness", 1);
 
 /***/ }),
 /* 150 */
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
 
@@ -18939,7 +19319,18 @@ _defineProperty(InkEditor, "_defaultThickness", 1);
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.fitCurve = void 0;
+
+var fitCurve = __w_pdfjs_require__(151);
+
 exports.fitCurve = fitCurve;
+
+/***/ }),
+/* 151 */
+/***/ ((module) => {
+
+"use strict";
+
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
@@ -18974,7 +19365,7 @@ function fitCurve(points, maxError, progressCallback) {
 
   points.forEach(function (point) {
     if (!Array.isArray(point) || point.some(function (item) {
-      return typeof item !== "number";
+      return typeof item !== 'number';
     }) || point.length !== points[0].length) {
       throw Error("Each point should be an array of numbers. Each point should have the same amount of numbers.");
     }
@@ -18997,7 +19388,7 @@ function fitCurve(points, maxError, progressCallback) {
 
 function fitCubic(points, leftTangent, rightTangent, error, progressCallback) {
   var MaxIterations = 20;
-  var bezCurve, uPrime, maxError, prevErr, splitPoint, prevSplit, centerVector, beziers, dist, i;
+  var bezCurve, u, uPrime, maxError, prevErr, splitPoint, prevSplit, centerVector, toCenterTangent, fromCenterTangent, beziers, dist, i;
 
   if (points.length === 2) {
     dist = maths.vectorLen(maths.subtract(points[0], points[1])) / 3.0;
@@ -19005,7 +19396,7 @@ function fitCubic(points, leftTangent, rightTangent, error, progressCallback) {
     return [bezCurve];
   }
 
-  var u = chordLengthParameterize(points);
+  u = chordLengthParameterize(points);
 
   var _generateAndReport = generateAndReport(points, u, u, leftTangent, rightTangent, progressCallback);
 
@@ -19040,7 +19431,7 @@ function fitCubic(points, leftTangent, rightTangent, error, progressCallback) {
       } else if (splitPoint === prevSplit) {
         var errChange = maxError / prevErr;
 
-        if (errChange > 0.9999 && errChange < 1.0001) {
+        if (errChange > .9999 && errChange < 1.0001) {
           break;
         }
       }
@@ -19062,20 +19453,25 @@ function fitCubic(points, leftTangent, rightTangent, error, progressCallback) {
     centerVector[1] = _ref[1];
   }
 
-  var toCenterTangent = maths.normalize(centerVector);
-  var fromCenterTangent = maths.mulItems(toCenterTangent, -1);
+  toCenterTangent = maths.normalize(centerVector);
+  fromCenterTangent = maths.mulItems(toCenterTangent, -1);
   beziers = beziers.concat(fitCubic(points.slice(0, splitPoint + 1), leftTangent, toCenterTangent, error, progressCallback));
   beziers = beziers.concat(fitCubic(points.slice(splitPoint), fromCenterTangent, rightTangent, error, progressCallback));
   return beziers;
 }
 
-function generateAndReport(points, paramsOrig, paramsPrime, leftTangent, rightTangent, progressCallback) {
-  var bezCurve = generateBezier(points, paramsPrime, leftTangent, rightTangent);
+;
 
-  var _computeMaxError = computeMaxError(points, bezCurve, paramsOrig),
-      _computeMaxError2 = _slicedToArray(_computeMaxError, 2),
-      maxError = _computeMaxError2[0],
-      splitPoint = _computeMaxError2[1];
+function generateAndReport(points, paramsOrig, paramsPrime, leftTangent, rightTangent, progressCallback) {
+  var bezCurve, maxError, splitPoint;
+  bezCurve = generateBezier(points, paramsPrime, leftTangent, rightTangent, progressCallback);
+
+  var _computeMaxError = computeMaxError(points, bezCurve, paramsOrig);
+
+  var _computeMaxError2 = _slicedToArray(_computeMaxError, 2);
+
+  maxError = _computeMaxError2[0];
+  splitPoint = _computeMaxError2[1];
 
   if (progressCallback) {
     progressCallback({
@@ -19091,13 +19487,29 @@ function generateAndReport(points, paramsOrig, paramsPrime, leftTangent, rightTa
 }
 
 function generateBezier(points, parameters, leftTangent, rightTangent) {
-  var a, tmp, u, ux;
-  var firstPoint = points[0];
-  var lastPoint = points.at(-1);
-  var bezCurve = [firstPoint, null, null, lastPoint];
-  var A = maths.zeros_Xx2x2(parameters.length);
+  var bezCurve,
+      A,
+      a,
+      C,
+      X,
+      det_C0_C1,
+      det_C0_X,
+      det_X_C1,
+      alpha_l,
+      alpha_r,
+      epsilon,
+      segLength,
+      i,
+      len,
+      tmp,
+      u,
+      ux,
+      firstPoint = points[0],
+      lastPoint = points[points.length - 1];
+  bezCurve = [firstPoint, null, null, lastPoint];
+  A = maths.zeros_Xx2x2(parameters.length);
 
-  for (var i = 0, len = parameters.length; i < len; i++) {
+  for (i = 0, len = parameters.length; i < len; i++) {
     u = parameters[i];
     ux = 1 - u;
     a = A[i];
@@ -19105,28 +19517,28 @@ function generateBezier(points, parameters, leftTangent, rightTangent) {
     a[1] = maths.mulItems(rightTangent, 3 * ux * (u * u));
   }
 
-  var C = [[0, 0], [0, 0]];
-  var X = [0, 0];
+  C = [[0, 0], [0, 0]];
+  X = [0, 0];
 
-  for (var _i2 = 0, _len = points.length; _i2 < _len; _i2++) {
-    u = parameters[_i2];
-    a = A[_i2];
+  for (i = 0, len = points.length; i < len; i++) {
+    u = parameters[i];
+    a = A[i];
     C[0][0] += maths.dot(a[0], a[0]);
     C[0][1] += maths.dot(a[0], a[1]);
     C[1][0] += maths.dot(a[0], a[1]);
     C[1][1] += maths.dot(a[1], a[1]);
-    tmp = maths.subtract(points[_i2], bezier.q([firstPoint, firstPoint, lastPoint, lastPoint], u));
+    tmp = maths.subtract(points[i], bezier.q([firstPoint, firstPoint, lastPoint, lastPoint], u));
     X[0] += maths.dot(a[0], tmp);
     X[1] += maths.dot(a[1], tmp);
   }
 
-  var det_C0_C1 = C[0][0] * C[1][1] - C[1][0] * C[0][1];
-  var det_C0_X = C[0][0] * X[1] - C[1][0] * X[0];
-  var det_X_C1 = X[0] * C[1][1] - X[1] * C[0][1];
-  var alpha_l = det_C0_C1 === 0 ? 0 : det_X_C1 / det_C0_C1;
-  var alpha_r = det_C0_C1 === 0 ? 0 : det_C0_X / det_C0_C1;
-  var segLength = maths.vectorLen(maths.subtract(firstPoint, lastPoint));
-  var epsilon = 1.0e-6 * segLength;
+  det_C0_C1 = C[0][0] * C[1][1] - C[1][0] * C[0][1];
+  det_C0_X = C[0][0] * X[1] - C[1][0] * X[0];
+  det_X_C1 = X[0] * C[1][1] - X[1] * C[0][1];
+  alpha_l = det_C0_C1 === 0 ? 0 : det_X_C1 / det_C0_C1;
+  alpha_r = det_C0_C1 === 0 ? 0 : det_C0_X / det_C0_C1;
+  segLength = maths.vectorLen(maths.subtract(firstPoint, lastPoint));
+  epsilon = 1.0e-6 * segLength;
 
   if (alpha_l < epsilon || alpha_r < epsilon) {
     bezCurve[1] = maths.addArrays(firstPoint, maths.mulItems(leftTangent, segLength / 3.0));
@@ -19139,11 +19551,15 @@ function generateBezier(points, parameters, leftTangent, rightTangent) {
   return bezCurve;
 }
 
+;
+
 function reparameterize(bezier, points, parameters) {
   return parameters.map(function (p, i) {
     return newtonRaphsonRootFind(bezier, points[i], p);
   });
 }
+
+;
 
 function newtonRaphsonRootFind(bez, point, u) {
   var d = maths.subtract(bezier.q(bez, u), point),
@@ -19153,10 +19569,12 @@ function newtonRaphsonRootFind(bez, point, u) {
 
   if (denominator === 0) {
     return u;
+  } else {
+    return u - numerator / denominator;
   }
-
-  return u - numerator / denominator;
 }
+
+;
 
 function chordLengthParameterize(points) {
   var u = [],
@@ -19174,6 +19592,8 @@ function chordLengthParameterize(points) {
   });
   return u;
 }
+
+;
 
 function computeMaxError(points, bez, parameters) {
   var dist, maxDist, splitPoint, v, i, count, point, t;
@@ -19196,7 +19616,9 @@ function computeMaxError(points, bez, parameters) {
   return [maxDist, splitPoint];
 }
 
-function mapTtoRelativeDistances(bez, B_parts) {
+;
+
+var mapTtoRelativeDistances = function mapTtoRelativeDistances(bez, B_parts) {
   var B_t_curr;
   var B_t_dist = [0];
   var B_t_prev = bez[0];
@@ -19213,7 +19635,7 @@ function mapTtoRelativeDistances(bez, B_parts) {
     return x / sumLen;
   });
   return B_t_dist;
-}
+};
 
 function find_t(bez, param, t_distMap, B_parts) {
   if (param < 0) {
@@ -19370,8 +19792,12 @@ var bezier = /*#__PURE__*/function () {
   return bezier;
 }();
 
+module.exports = fitCurve;
+module.exports.fitCubic = fitCubic;
+module.exports.createTangent = createTangent;
+
 /***/ }),
-/* 151 */
+/* 152 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -19390,9 +19816,9 @@ var _display_utils = __w_pdfjs_require__(133);
 
 var _annotation_storage = __w_pdfjs_require__(130);
 
-var _scripting_utils = __w_pdfjs_require__(152);
+var _scripting_utils = __w_pdfjs_require__(153);
 
-var _xfa_layer = __w_pdfjs_require__(153);
+var _xfa_layer = __w_pdfjs_require__(154);
 
 function _classStaticPrivateMethodGet(receiver, classConstructor, method) { _classCheckPrivateStaticAccess(receiver, classConstructor); return method; }
 
@@ -21099,9 +21525,9 @@ var PushButtonWidgetAnnotationElement = /*#__PURE__*/function (_LinkAnnotationEl
         container.title = this.data.alternativeText;
       }
 
-      if (this.enableScripting && this.hasJSActions) {
-        var linkElement = container.lastChild;
+      var linkElement = container.lastChild;
 
+      if (this.enableScripting && this.hasJSActions && linkElement) {
         this._setDefaultPropertiesFromJS(linkElement);
 
         linkElement.addEventListener("updatefromsandbox", function (jsEvent) {
@@ -22462,7 +22888,7 @@ function _setAnnotationCanvasMap(div, annotationCanvasMap) {
 }
 
 /***/ }),
-/* 152 */
+/* 153 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -22603,7 +23029,7 @@ var ColorConverters = /*#__PURE__*/function () {
 exports.ColorConverters = ColorConverters;
 
 /***/ }),
-/* 153 */
+/* 154 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -22751,26 +23177,38 @@ var XfaLayer = /*#__PURE__*/function () {
             key = _Object$entries$_i[0],
             value = _Object$entries$_i[1];
 
-        if (value === null || value === undefined || key === "dataId") {
+        if (value === null || value === undefined) {
           continue;
         }
 
-        if (key !== "style") {
-          if (key === "textContent") {
-            html.textContent = value;
-          } else if (key === "class") {
+        switch (key) {
+          case "class":
             if (value.length) {
               html.setAttribute(key, value.join(" "));
             }
-          } else {
-            if (isHTMLAnchorElement && (key === "href" || key === "newWindow")) {
-              continue;
+
+            break;
+
+          case "dataId":
+            break;
+
+          case "id":
+            html.setAttribute("data-element-id", value);
+            break;
+
+          case "style":
+            Object.assign(html.style, value);
+            break;
+
+          case "textContent":
+            html.textContent = value;
+            break;
+
+          default:
+            if (!isHTMLAnchorElement || key !== "href" && key !== "newWindow") {
+              html.setAttribute(key, value);
             }
 
-            html.setAttribute(key, value);
-          }
-        } else {
-          Object.assign(html.style, value);
         }
       }
 
@@ -22910,7 +23348,7 @@ var XfaLayer = /*#__PURE__*/function () {
 exports.XfaLayer = XfaLayer;
 
 /***/ }),
-/* 154 */
+/* 155 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -22923,6 +23361,8 @@ exports.TextLayerRenderTask = void 0;
 exports.renderTextLayer = renderTextLayer;
 
 var _util = __w_pdfjs_require__(1);
+
+var _display_utils = __w_pdfjs_require__(133);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -23463,6 +23903,10 @@ var TextLayerRenderTask = /*#__PURE__*/function () {
 
     _classCallCheck(this, TextLayerRenderTask);
 
+    if (enhanceTextSelection) {
+      (0, _display_utils.deprecated)("The `enhanceTextSelection` functionality will be removed in the future.");
+    }
+
     this._textContent = textContent;
     this._textContentStream = textContentStream;
     this._container = container;
@@ -23758,7 +24202,7 @@ function renderTextLayer(renderParameters) {
 }
 
 /***/ }),
-/* 155 */
+/* 156 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -25538,7 +25982,7 @@ exports.SVGGraphics = SVGGraphics;
 }
 
 /***/ }),
-/* 156 */
+/* 157 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -25553,7 +25997,7 @@ exports.PDFNodeStream = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _network_utils = __w_pdfjs_require__(157);
+var _network_utils = __w_pdfjs_require__(158);
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -26199,7 +26643,7 @@ var PDFNodeStreamFsRangeReader = /*#__PURE__*/function (_BaseRangeReader2) {
 }(BaseRangeReader);
 
 /***/ }),
-/* 157 */
+/* 158 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -26215,7 +26659,7 @@ exports.validateResponseStatus = validateResponseStatus;
 
 var _util = __w_pdfjs_require__(1);
 
-var _content_disposition = __w_pdfjs_require__(158);
+var _content_disposition = __w_pdfjs_require__(159);
 
 var _display_utils = __w_pdfjs_require__(133);
 
@@ -26291,7 +26735,7 @@ function validateResponseStatus(status) {
 }
 
 /***/ }),
-/* 158 */
+/* 159 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -26495,7 +26939,7 @@ function getFilenameFromContentDispositionHeader(contentDisposition) {
 }
 
 /***/ }),
-/* 159 */
+/* 160 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -26510,7 +26954,7 @@ exports.PDFNetworkStream = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _network_utils = __w_pdfjs_require__(157);
+var _network_utils = __w_pdfjs_require__(158);
 
 function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return generator._invoke = function (innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; }(innerFn, self, context), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == _typeof(value) && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; this._invoke = function (method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); }; } function maybeInvokeDelegate(delegate, context) { var method = delegate.iterator[context.method]; if (undefined === method) { if (context.delegate = null, "throw" === context.method) { if (delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method)) return ContinueSentinel; context.method = "throw", context.arg = new TypeError("The iterator does not provide a 'throw' method"); } return ContinueSentinel; } var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) { if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; } return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, define(Gp, "constructor", GeneratorFunctionPrototype), define(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (object) { var keys = []; for (var key in object) { keys.push(key); } return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) { "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); } }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
 
@@ -27259,7 +27703,7 @@ var PDFNetworkStreamRangeRequestReader = /*#__PURE__*/function () {
 }();
 
 /***/ }),
-/* 160 */
+/* 161 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 "use strict";
@@ -27274,7 +27718,7 @@ exports.PDFFetchStream = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _network_utils = __w_pdfjs_require__(157);
+var _network_utils = __w_pdfjs_require__(158);
 
 function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return generator._invoke = function (innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; }(innerFn, self, context), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == _typeof(value) && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; this._invoke = function (method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); }; } function maybeInvokeDelegate(delegate, context) { var method = delegate.iterator[context.method]; if (undefined === method) { if (context.delegate = null, "throw" === context.method) { if (delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method)) return ContinueSentinel; context.method = "throw", context.arg = new TypeError("The iterator does not provide a 'throw' method"); } return ContinueSentinel; } var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) { if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; } return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, define(Gp, "constructor", GeneratorFunctionPrototype), define(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (object) { var keys = []; for (var key in object) { keys.push(key); } return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) { "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); } }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
 
@@ -27942,33 +28386,33 @@ var _annotation_editor_layer = __w_pdfjs_require__(147);
 
 var _tools = __w_pdfjs_require__(132);
 
-var _annotation_layer = __w_pdfjs_require__(151);
+var _annotation_layer = __w_pdfjs_require__(152);
 
 var _worker_options = __w_pdfjs_require__(140);
 
 var _is_node = __w_pdfjs_require__(3);
 
-var _text_layer = __w_pdfjs_require__(154);
+var _text_layer = __w_pdfjs_require__(155);
 
-var _svg = __w_pdfjs_require__(155);
+var _svg = __w_pdfjs_require__(156);
 
-var _xfa_layer = __w_pdfjs_require__(153);
+var _xfa_layer = __w_pdfjs_require__(154);
 
-var pdfjsVersion = '2.15.223';
-var pdfjsBuild = '508ad7b10';
+var pdfjsVersion = '2.15.266';
+var pdfjsBuild = '9ee8021b8';
 {
   if (_is_node.isNodeJS) {
-    var _require = __w_pdfjs_require__(156),
+    var _require = __w_pdfjs_require__(157),
         PDFNodeStream = _require.PDFNodeStream;
 
     (0, _api.setPDFNetworkStreamFactory)(function (params) {
       return new PDFNodeStream(params);
     });
   } else {
-    var _require2 = __w_pdfjs_require__(159),
+    var _require2 = __w_pdfjs_require__(160),
         PDFNetworkStream = _require2.PDFNetworkStream;
 
-    var _require3 = __w_pdfjs_require__(160),
+    var _require3 = __w_pdfjs_require__(161),
         PDFFetchStream = _require3.PDFFetchStream;
 
     (0, _api.setPDFNetworkStreamFactory)(function (params) {

@@ -24,11 +24,11 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define("pdfjs-dist/web/pdf_viewer", [], factory);
+		define("pdf.js-extract-colour-dist/web/pdf_viewer", [], factory);
 	else if(typeof exports === 'object')
-		exports["pdfjs-dist/web/pdf_viewer"] = factory();
+		exports["pdf.js-extract-colour-dist/web/pdf_viewer"] = factory();
 	else
-		root["pdfjs-dist/web/pdf_viewer"] = root.pdfjsViewer = factory();
+		root["pdf.js-extract-colour-dist/web/pdf_viewer"] = root.pdfjsViewer = factory();
 })(globalThis, () => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
@@ -3055,7 +3055,7 @@ var BaseViewer = /*#__PURE__*/function () {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    var viewerVersion = '2.15.223';
+    var viewerVersion = '2.15.266';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error("The API version \"".concat(_pdfjsLib.version, "\" does not match the Viewer version \"").concat(viewerVersion, "\"."));
@@ -3355,6 +3355,12 @@ var BaseViewer = /*#__PURE__*/function () {
 
         if (this._scriptingManager) {
           this._scriptingManager.setDocument(null);
+        }
+
+        if (_classPrivateFieldGet(this, _annotationEditorUIManager)) {
+          _classPrivateFieldGet(this, _annotationEditorUIManager).destroy();
+
+          _classPrivateFieldSet(this, _annotationEditorUIManager, null);
         }
       }
 
@@ -3662,8 +3668,6 @@ var BaseViewer = /*#__PURE__*/function () {
   }, {
     key: "_resetView",
     value: function _resetView() {
-      _classPrivateFieldSet(this, _annotationEditorUIManager, null);
-
       this._pages = [];
       this._currentPageNumber = 1;
       this._currentScale = _ui_utils.UNKNOWN_SCALE;
@@ -5188,6 +5192,10 @@ var defaultOptions = {
   maxCanvasPixels: {
     value: 16777216,
     kind: OptionKind.VIEWER
+  },
+  forcePageColors: {
+    value: false,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   pageColorsBackground: {
     value: "Canvas",
@@ -11560,8 +11568,8 @@ var _text_layer_builder = __w_pdfjs_require__(9);
 
 var _xfa_layer_builder = __w_pdfjs_require__(10);
 
-var pdfjsVersion = '2.15.223';
-var pdfjsBuild = '508ad7b10';
+var pdfjsVersion = '2.15.266';
+var pdfjsBuild = '9ee8021b8';
 })();
 
 /******/ 	return __webpack_exports__;

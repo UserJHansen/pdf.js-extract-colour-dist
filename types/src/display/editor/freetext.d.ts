@@ -23,6 +23,8 @@ export class FreeTextEditor extends AnnotationEditor {
     enableEditMode(): void;
     /** @inheritdoc */
     disableEditMode(): void;
+    /** @inheritdoc */
+    remove(): void;
     /**
      * Commit the content we have in this editor.
      * @returns {undefined}
@@ -46,7 +48,7 @@ export class FreeTextEditor extends AnnotationEditor {
         pageIndex: number;
         rect: number[];
         rotation: any;
-    };
+    } | null;
     #private;
 }
 import { AnnotationEditor } from "./editor.js";

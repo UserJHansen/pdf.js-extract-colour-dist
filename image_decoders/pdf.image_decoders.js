@@ -24,11 +24,11 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define("pdfjs-dist/image_decoders/pdf.image_decoders", [], factory);
+		define("pdf.js-extract-colour-dist/image_decoders/pdf.image_decoders", [], factory);
 	else if(typeof exports === 'object')
-		exports["pdfjs-dist/image_decoders/pdf.image_decoders"] = factory();
+		exports["pdf.js-extract-colour-dist/image_decoders/pdf.image_decoders"] = factory();
 	else
-		root["pdfjs-dist/image_decoders/pdf.image_decoders"] = root.pdfjsImageDecoders = factory();
+		root["pdf.js-extract-colour-dist/image_decoders/pdf.image_decoders"] = root.pdfjsImageDecoders = factory();
 })(globalThis, () => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
@@ -3859,8 +3859,7 @@ const Name = function NameClosure() {
     }
 
     static get(name) {
-      const nameValue = nameCache[name];
-      return nameValue ? nameValue : nameCache[name] = new Name(name);
+      return nameCache[name] || (nameCache[name] = new Name(name));
     }
 
     static _clearCache() {
@@ -3883,8 +3882,7 @@ const Cmd = function CmdClosure() {
     }
 
     static get(cmd) {
-      const cmdValue = cmdCache[cmd];
-      return cmdValue ? cmdValue : cmdCache[cmd] = new Cmd(cmd);
+      return cmdCache[cmd] || (cmdCache[cmd] = new Cmd(cmd));
     }
 
     static _clearCache() {
@@ -4094,8 +4092,7 @@ const Ref = function RefClosure() {
 
     static get(num, gen) {
       const key = gen === 0 ? `${num}R` : `${num}R${gen}`;
-      const refValue = refCache[key];
-      return refValue ? refValue : refCache[key] = new Ref(num, gen);
+      return refCache[key] || (refCache[key] = new Ref(num, gen));
     }
 
     static _clearCache() {
@@ -9029,8 +9026,8 @@ var _jpg = __w_pdfjs_require__(10);
 
 var _jpx = __w_pdfjs_require__(11);
 
-const pdfjsVersion = '2.15.223';
-const pdfjsBuild = '508ad7b10';
+const pdfjsVersion = '2.15.266';
+const pdfjsBuild = '9ee8021b8';
 })();
 
 /******/ 	return __webpack_exports__;

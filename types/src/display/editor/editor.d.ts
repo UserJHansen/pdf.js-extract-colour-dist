@@ -107,6 +107,11 @@ export class AnnotationEditor {
      * @returns {HTMLDivElement}
      */
     render(): HTMLDivElement;
+    /**
+     * Onmousedown callback.
+     * @param {MouseEvent} event
+     */
+    mousedown(event: MouseEvent): void;
     getRect(tx: any, ty: any): number[];
     /**
      * Executed once this editor has been rendered.

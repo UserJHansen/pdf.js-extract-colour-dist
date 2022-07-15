@@ -24,11 +24,11 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define("pdfjs-dist/image_decoders/pdf.image_decoders", [], factory);
+		define("pdf.js-extract-colour-dist/image_decoders/pdf.image_decoders", [], factory);
 	else if(typeof exports === 'object')
-		exports["pdfjs-dist/image_decoders/pdf.image_decoders"] = factory();
+		exports["pdf.js-extract-colour-dist/image_decoders/pdf.image_decoders"] = factory();
 	else
-		root["pdfjs-dist/image_decoders/pdf.image_decoders"] = root.pdfjsImageDecoders = factory();
+		root["pdf.js-extract-colour-dist/image_decoders/pdf.image_decoders"] = root.pdfjsImageDecoders = factory();
 })(globalThis, () => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ([
@@ -1796,10 +1796,10 @@ var store = __w_pdfjs_require__(38);
 (module.exports = function (key, value) {
  return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
- version: '3.23.2',
+ version: '3.23.4',
  mode: IS_PURE ? 'pure' : 'global',
  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
- license: 'https://github.com/zloirock/core-js/blob/v3.23.2/LICENSE',
+ license: 'https://github.com/zloirock/core-js/blob/v3.23.4/LICENSE',
  source: 'https://github.com/zloirock/core-js'
 });
 
@@ -2007,10 +2007,13 @@ module.exports = function (O, key, value, options) {
   else
    defineGlobalProperty(key, value);
  } else {
-  if (!options.unsafe)
-   delete O[key];
-  else if (O[key])
-   simple = true;
+  try {
+   if (!options.unsafe)
+    delete O[key];
+   else if (O[key])
+    simple = true;
+  } catch (error) {
+  }
   if (simple)
    O[key] = value;
   else
@@ -2052,10 +2055,13 @@ var makeBuiltIn = module.exports = function (value, name, options) {
  if (options && options.setter)
   name = 'set ' + name;
  if (!hasOwn(value, 'name') || CONFIGURABLE_FUNCTION_NAME && value.name !== name) {
-  defineProperty(value, 'name', {
-   value: name,
-   configurable: true
-  });
+  if (DESCRIPTORS)
+   defineProperty(value, 'name', {
+    value: name,
+    configurable: true
+   });
+  else
+   value.name = name;
  }
  if (CONFIGURABLE_LENGTH && options && hasOwn(options, 'arity') && value.length !== options.arity) {
   defineProperty(value, 'length', { value: options.arity });
@@ -5942,8 +5948,7 @@ var Name = function NameClosure() {
     _createClass(Name, null, [{
       key: "get",
       value: function get(name) {
-        var nameValue = nameCache[name];
-        return nameValue ? nameValue : nameCache[name] = new Name(name);
+        return nameCache[name] || (nameCache[name] = new Name(name));
       }
     }, {
       key: "_clearCache",
@@ -5973,8 +5978,7 @@ var Cmd = function CmdClosure() {
     _createClass(Cmd, null, [{
       key: "get",
       value: function get(cmd) {
-        var cmdValue = cmdCache[cmd];
-        return cmdValue ? cmdValue : cmdCache[cmd] = new Cmd(cmd);
+        return cmdCache[cmd] || (cmdCache[cmd] = new Cmd(cmd));
       }
     }, {
       key: "_clearCache",
@@ -6279,8 +6283,7 @@ var Ref = function RefClosure() {
       key: "get",
       value: function get(num, gen) {
         var key = gen === 0 ? "".concat(num, "R") : "".concat(num, "R").concat(gen);
-        var refValue = refCache[key];
-        return refValue ? refValue : refCache[key] = new Ref(num, gen);
+        return refCache[key] || (refCache[key] = new Ref(num, gen));
       }
     }, {
       key: "_clearCache",
@@ -11493,8 +11496,8 @@ var _jpg = __w_pdfjs_require__(92);
 
 var _jpx = __w_pdfjs_require__(93);
 
-var pdfjsVersion = '2.15.223';
-var pdfjsBuild = '508ad7b10';
+var pdfjsVersion = '2.15.266';
+var pdfjsBuild = '9ee8021b8';
 })();
 
 /******/ 	return __webpack_exports__;

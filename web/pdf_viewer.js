@@ -24,11 +24,11 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define("pdfjs-dist/web/pdf_viewer", [], factory);
+		define("pdf.js-extract-colour-dist/web/pdf_viewer", [], factory);
 	else if(typeof exports === 'object')
-		exports["pdfjs-dist/web/pdf_viewer"] = factory();
+		exports["pdf.js-extract-colour-dist/web/pdf_viewer"] = factory();
 	else
-		root["pdfjs-dist/web/pdf_viewer"] = root.pdfjsViewer = factory();
+		root["pdf.js-extract-colour-dist/web/pdf_viewer"] = root.pdfjsViewer = factory();
 })(globalThis, () => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
@@ -2196,7 +2196,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.15.223';
+    const viewerVersion = '2.15.266';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -2510,6 +2510,11 @@ class BaseViewer {
       if (this._scriptingManager) {
         this._scriptingManager.setDocument(null);
       }
+
+      if (this.#annotationEditorUIManager) {
+        this.#annotationEditorUIManager.destroy();
+        this.#annotationEditorUIManager = null;
+      }
     }
 
     this.pdfDocument = pdfDocument;
@@ -2752,7 +2757,6 @@ class BaseViewer {
   }
 
   _resetView() {
-    this.#annotationEditorUIManager = null;
     this._pages = [];
     this._currentPageNumber = 1;
     this._currentScale = _ui_utils.UNKNOWN_SCALE;
@@ -3973,6 +3977,10 @@ const defaultOptions = {
   maxCanvasPixels: {
     value: 16777216,
     kind: OptionKind.VIEWER
+  },
+  forcePageColors: {
+    value: false,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   pageColorsBackground: {
     value: "Canvas",
@@ -8865,8 +8873,8 @@ var _text_layer_builder = __w_pdfjs_require__(9);
 
 var _xfa_layer_builder = __w_pdfjs_require__(10);
 
-const pdfjsVersion = '2.15.223';
-const pdfjsBuild = '508ad7b10';
+const pdfjsVersion = '2.15.266';
+const pdfjsBuild = '9ee8021b8';
 })();
 
 /******/ 	return __webpack_exports__;

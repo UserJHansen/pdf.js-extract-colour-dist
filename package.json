@@ -1,6 +1,6 @@
 {
-  "name": "pdfjs-color-dist",
-  "version": "2.15.223",
+  "name": "pdf.js-extract-colour-dist",
+  "version": "2.15.266",
   "main": "build/pdf.js",
   "types": "types/src/pdf.d.ts",
   "description": "Modification of pdf.js that returns the color in gettextcontent.",
@@ -10,6 +10,7 @@
     "pdf.js",
     "color"
   ],
+  "homepage": "https://github.com/UserJHansen/pdf.js-extract-colour",
   "bugs": "https://github.com/UserJHansen/pdf.js-extract-colour/issues",
   "license": "Apache-2.0",
   "dependencies": {
@@ -35,6 +36,6 @@
   "format": "amd",
   "repository": {
     "type": "git",
-    "url": "https://github.com/UserJHansen/pdf.js-extract-colour-dist"
+    "url": "https://github.com/userjhansen/pdf.js-extract-colour-dist"
   }
 }
